@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CreateHub — Creator Economy Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet"/>
+    <script src="https://js.stripe.com/v3/"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --syne: 'Syne', sans-serif;
+    --dm: 'DM Sans', sans-serif;
+    --bg: #08080e;
+    --bg2: #0f0f18;
+    --bg3: #17172280;
+    --bg3s: #171722;
+    --bg4: #1e1e2e;
+    --border: #22223388;
+    --border2: #32324a;
+    --text: #ededf8;
+    --text2: #8888aa;
+    --text3: #44445a;
+    --accent: #7c6ff7;
+    --accent2: #5b4fe0;
+    --accent3: #a89dff;
+    --accentbg: #1a1730;
+    --green: #22d48e;
+    --greenbg: #0a2018;
+    --red: #f04444;
+    --redbg: #200a0a;
+    --amber: #f5a623;
+    --amberbg: #201408;
+    --blue: #4a9eff;
+    --bluebg: #0a1828;
+    --pink: #e056a0;
+    --teal: #1db8a0;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--dm);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ─── APP SHELL ─── */
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ─── TOPNAV ─── */
+  .nav {
+    display: flex; align-items: center; padding: 0 2rem; height: 58px;
+    border-bottom: 1px solid var(--border); background: var(--bg);
+    position: sticky; top: 0; z-index: 200; gap: 0.75rem;
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: var(--syne); font-weight: 800; font-size: 20px;
+    color: var(--text); letter-spacing: -0.5px; cursor: pointer;
+    user-select: none; flex-shrink: 0;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-pill {
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+    background: var(--accentbg); color: var(--accent3); border: 1px solid #2e2860;
+    letter-spacing: 0.3px;
+  }
+  .nav-links { display: flex; gap: 0.4rem; margin-left: auto; align-items: center; }
+  .nav-btn {
+    font-family: var(--dm); font-size: 13px; padding: 7px 15px;
+    border-radius: 8px; border: none; cursor: pointer; font-weight: 500;
+    transition: all 0.15s; line-height: 1;
+  }
+  .nav-btn.ghost { background: transparent; color: var(--text2); }
+  .nav-btn.ghost:hover { background: var(--bg4); color: var(--text); }
+  .nav-btn.primary { background: var(--accent); color: #fff; }
+  .nav-btn.primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .nav-btn.outline { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .nav-btn.outline:hover { background: var(--bg4); color: var(--text); }
+  .nav-profile {
+    display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px;
+    background: var(--bg3s); border: 1px solid var(--border2); border-radius: 9px;
+    cursor: pointer; transition: background 0.12s;
+  }
+  .nav-profile:hover { background: var(--bg4); }
+  .notif-btn {
+    position: relative; background: transparent; border: 1px solid var(--border2);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; color: var(--text2);
+    font-size: 15px; transition: all 0.12s;
+  }
+  .notif-btn:hover { background: var(--bg4); color: var(--text); }
+  .notif-dot {
+    position: absolute; top: 5px; right: 6px; width: 7px; height: 7px;
+    background: var(--accent); border-radius: 50%; border: 1px solid var(--bg);
+  }
+
+  /* ─── LAYOUT ─── */
+  .shell { display: flex; flex: 1; min-height: calc(100vh - 58px); }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: 220px; min-width: 220px; background: var(--bg2);
+    border-right: 1px solid var(--border); padding: 1rem 0;
+    display: flex; flex-direction: column; position: sticky;
+    top: 58px; height: calc(100vh - 58px); overflow-y: auto;
+  }
+  .sidebar-section {
+    font-size: 10px; font-weight: 700; color: var(--text3);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    padding: 0.9rem 1.25rem 0.3rem;
+  }
+  .s-item {
+    display: flex; align-items: center; gap: 9px; padding: 9px 1.25rem;
+    cursor: pointer; color: var(--text2); font-size: 13.5px;
+    border-left: 2px solid transparent; transition: all 0.12s; user-select: none;
+  }
+  .s-item:hover { color: var(--text); background: var(--bg3s); }
+  .s-item.active { color: var(--text); background: var(--bg3s); border-left-color: var(--accent); }
+  .s-item .s-icon { width: 17px; text-align: center; font-size: 14px; flex-shrink: 0; }
+  .s-badge {
+    margin-left: auto; font-size: 10px; background: var(--accent);
+    color: #fff; padding: 2px 7px; border-radius: 10px; font-weight: 700;
+  }
+  .sidebar-footer { margin-top: auto; padding: 1rem 1.25rem; }
+
+  /* ─── MAIN CONTENT ─── */
+  .main { flex: 1; overflow-y: auto; background: var(--bg); }
+  .page { padding: 2rem; max-width: 1080px; animation: fadeUp 0.22s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── PAGE HEADER ─── */
+  .ph { margin-bottom: 1.75rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .ph-left {}
+  .ph-title { font-family: var(--syne); font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .ph-sub { color: var(--text2); font-size: 13.5px; margin-top: 3px; }
+
+  /* ─── STAT CARDS ─── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.2rem 1.25rem;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .stat-val { font-family: var(--syne); font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .stat-change { font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 3px; }
+  .up { color: var(--green); }
+  .dn { color: var(--red); }
+  .neu { color: var(--text3); }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.25rem;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 700; color: var(--text3);
+    letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1rem;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+  .mt-1 { margin-top: 0.5rem; }
+  .mt-2 { margin-top: 1rem; }
+  .mt-3 { margin-top: 1.5rem; }
+  .mb-2 { margin-bottom: 1rem; }
+  .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+  .w100 { width: 100%; }
+
+  /* ─── BADGES ─── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 20px; letter-spacing: 0.2px; white-space: nowrap;
+  }
+  .b-green { background: var(--greenbg); color: var(--green); }
+  .b-red { background: var(--redbg); color: var(--red); }
+  .b-amber { background: var(--amberbg); color: var(--amber); }
+  .b-blue { background: var(--bluebg); color: var(--blue); }
+  .b-purple { background: var(--accentbg); color: var(--accent3); }
+  .b-gray { background: var(--bg4); color: var(--text2); border: 1px solid var(--border2); }
+
+  /* ─── AVATAR ─── */
+  .avatar {
+    border-radius: 50%; display: inline-flex; align-items: center;
+    justify-content: center; font-weight: 700; color: #fff; flex-shrink: 0;
+    font-size: 12px;
+  }
+
+  /* ─── INPUTS / FORM ─── */
+  input, select, textarea {
+    background: var(--bg3s); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 9px 13px; color: var(--text);
+    font-family: var(--dm); font-size: 13.5px; outline: none;
+    transition: border-color 0.15s; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--text3); }
+  select option { background: var(--bg4); }
+  label { font-size: 12.5px; color: var(--text2); font-weight: 500; margin-bottom: 5px; display: block; }
+  .form-group { margin-bottom: 1.1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  textarea { resize: vertical; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; font-size: 13.5px;
+    font-weight: 500; cursor: pointer; font-family: var(--dm);
+    border: none; transition: all 0.15s; line-height: 1; white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-outline { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-outline:hover { background: var(--bg4); color: var(--text); }
+  .btn-danger { background: var(--redbg); color: var(--red); border: 1px solid #3a1010; }
+  .btn-danger:hover { background: #2a0a0a; }
+  .btn-success { background: var(--greenbg); color: var(--green); border: 1px solid #123020; }
+  .btn-success:hover { background: #0c2a1a; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 7px; }
+
+  /* ─── TABLES ─── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th {
+    text-align: left; font-size: 10.5px; color: var(--text3); font-weight: 700;
+    letter-spacing: 0.7px; text-transform: uppercase; padding: 0 1rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background 0.1s; }
+  tbody tr:hover td { background: var(--bg3s); }
+  .user-cell { display: flex; align-items: center; gap: 10px; }
+  .u-name { font-weight: 500; color: var(--text); font-size: 13.5px; }
+  .u-email { font-size: 12px; color: var(--text3); margin-top: 1px; }
+
+  /* ─── PROGRESS BAR ─── */
+  .pbar { height: 5px; background: var(--bg4); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+  .pfill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.3s; }
+
+  /* ─── BAR CHART ─── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; }
+  .bar-chart .bar {
+    flex: 1; border-radius: 3px 3px 0 0; opacity: 0.7;
+    transition: opacity 0.1s; cursor: pointer;
+  }
+  .bar-chart .bar:hover { opacity: 1; }
+  .chart-labels { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text3); margin-top: 5px; }
+
+  /* ─── TOAST ─── */
+  #toast-area {
+    position: fixed; bottom: 24px; right: 24px;
+    z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--bg4); border: 1px solid var(--border2); border-radius: 10px;
+    padding: 11px 16px; color: var(--text); font-size: 13.5px;
+    display: flex; align-items: center; gap: 10px;
+    animation: toastIn 0.2s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    max-width: 300px; pointer-events: all;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(16px); }
+  }
+
+  /* ─── MODAL ─── */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    z-index: 500; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); padding: 1rem;
+  }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius-xl); padding: 2rem; width: 460px; max-width: 100%;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.94) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-title { font-family: var(--syne); font-size: 18px; font-weight: 700; margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+  /* ─── LANDING ─── */
+  .hero {
+    padding: 6rem 2rem 5rem; text-align: center;
+    max-width: 860px; margin: 0 auto;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--accentbg); border: 1px solid #2e2860;
+    border-radius: 20px; padding: 5px 14px; font-size: 12px;
+    color: var(--accent3); font-weight: 600; margin-bottom: 1.75rem;
+    letter-spacing: 0.3px;
+  }
+  .hero-title {
+    font-family: var(--syne); font-size: clamp(38px, 5.5vw, 64px);
+    font-weight: 800; letter-spacing: -2.5px; line-height: 1.05;
+    color: var(--text); margin-bottom: 1.25rem;
+  }
+  .hero-title .hl { color: var(--accent); }
+  .hero-sub {
+    font-size: 17px; color: var(--text2); max-width: 560px;
+    margin: 0 auto 2.75rem; line-height: 1.75;
+  }
+  .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .hero-btn {
+    padding: 13px 30px; border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; border: none; font-family: var(--dm); transition: all 0.15s;
+  }
+  .hero-btn.primary {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 4px 28px rgba(124,111,247,0.4);
+  }
+  .hero-btn.primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,111,247,0.45); }
+  .hero-btn.secondary { background: var(--bg4); color: var(--text); border: 1px solid var(--border2); }
+  .hero-btn.secondary:hover { background: var(--bg3s); }
+
+  /* Stats banner */
+  .stats-banner {
+    display: flex; justify-content: center; gap: 3rem;
+    padding: 1.5rem 2rem 3rem; flex-wrap: wrap;
+  }
+  .stat-item { text-align: center; }
+  .stat-num { font-family: var(--syne); font-size: 28px; font-weight: 800; color: var(--text); letter-spacing: -1px; }
+  .stat-lbl { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* Features */
+  .features-section { padding: 0 2rem 5rem; max-width: 1100px; margin: 0 auto; }
+  .section-header { text-align: center; margin-bottom: 2.5rem; }
+  .section-tag {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--accent3); margin-bottom: 0.75rem;
+  }
+  .section-title { font-family: var(--syne); font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 0.5rem; }
+  .section-sub { color: var(--text2); font-size: 15px; }
+  .features-grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+  .feature-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 1.75rem;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .feature-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .f-icon { font-size: 26px; margin-bottom: 0.9rem; }
+  .f-title { font-family: var(--syne); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .f-desc { font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+  /* Pricing */
+  .pricing-section { padding: 0 2rem 6rem; max-width: 960px; margin: 0 auto; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+  .plan-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 1.75rem; position: relative;
+    transition: border-color 0.2s;
+  }
+  .plan-card:hover { border-color: var(--border2); }
+  .plan-card.featured { border-color: var(--accent); background: #0c0a1e; }
+  .plan-pop {
+    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #fff; font-size: 10px; font-weight: 800;
+    padding: 3px 12px; border-radius: 20px; letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .plan-name { font-family: var(--syne); font-size: 15px; font-weight: 700; margin-bottom: 0.25rem; color: var(--text2); }
+  .plan-price {
+    font-family: var(--syne); font-size: 40px; font-weight: 800;
+    color: var(--text); letter-spacing: -2px; margin-bottom: 1.5rem; line-height: 1;
+  }
+  .plan-price .per { font-size: 14px; color: var(--text3); font-weight: 400; letter-spacing: 0; }
+  .plan-feat {
+    font-size: 13px; color: var(--text2); padding: 6px 0;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+  }
+  .plan-feat:last-of-type { border-bottom: none; }
+  .ck { color: var(--green); font-size: 12px; flex-shrink: 0; }
+  .xx { color: var(--text3); font-size: 12px; flex-shrink: 0; }
+  .plan-cta {
+    width: 100%; margin-top: 1.5rem; padding: 11px; text-align: center;
+    border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer;
+    border: none; font-family: var(--dm); transition: all 0.15s;
+  }
+  .plan-cta.main { background: var(--accent); color: #fff; }
+  .plan-cta.main:hover { background: var(--accent2); }
+  .plan-cta.out { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .plan-cta.out:hover { background: var(--bg4); color: var(--text); }
+
+  /* Footer */
+  .landing-footer {
+    border-top: 1px solid var(--border); padding: 2rem;
+    text-align: center; color: var(--text3); font-size: 13px;
+  }
+  .landing-footer span { color: var(--accent3); }
+
+  /* ─── AUTH PAGE ─── */
+  .auth-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 3rem 2rem; min-height: calc(100vh - 58px);
+  }
+  .auth-card { width: 420px; max-width: 100%; }
+  .auth-logo { font-family: var(--syne); font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 4px; }
+  .auth-logo span { color: var(--accent); }
+  .auth-sub { color: var(--text2); text-align: center; margin-bottom: 2rem; font-size: 14px; }
+  .auth-tabs {
+    display: flex; background: var(--bg3s); border-radius: 10px; padding: 4px;
+    margin-bottom: 1.5rem; gap: 4px; border: 1px solid var(--border);
+  }
+  .auth-tab {
+    flex: 1; text-align: center; padding: 8px; border-radius: 7px;
+    cursor: pointer; font-size: 13.5px; color: var(--text2); transition: all 0.15s;
+    user-select: none;
+  }
+  .auth-tab.active { background: var(--bg4); color: var(--text); font-weight: 500; }
+  .auth-divider { display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0; color: var(--text3); font-size: 12px; }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .role-select { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem; }
+  .role-option {
+    padding: 1rem; border-radius: 10px; border: 1px solid var(--border2);
+    cursor: pointer; transition: all 0.15s; text-align: center;
+  }
+  .role-option:hover { border-color: var(--accent); background: var(--accentbg); }
+  .role-option.sel { border-color: var(--accent); background: var(--accentbg); }
+  .r-icon { font-size: 22px; margin-bottom: 5px; }
+  .r-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .r-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* ─── CREATOR PAGES ─── */
+  /* Products */
+  .product-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.15s;
+  }
+  .product-card:hover { border-color: var(--border2); }
+  .prod-thumb {
+    height: 115px; background: var(--bg3s); display: flex; align-items: center;
+    justify-content: center; font-size: 36px; position: relative;
+  }
+  .prod-body { padding: 1rem; }
+  .prod-name { font-weight: 600; color: var(--text); font-size: 14px; margin-bottom: 3px; }
+  .prod-meta { font-size: 12px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; }
+  .prod-price { font-family: var(--syne); font-size: 18px; font-weight: 800; color: var(--green); }
+  .prod-actions { display: flex; gap: 6px; margin-top: 0.75rem; }
+
+  /* Link in Bio */
+  .bio-preview {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 2rem; text-align: center;
+  }
+  .bio-ring {
+    width: 74px; height: 74px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    padding: 2.5px; margin: 0 auto 1rem;
+  }
+  .bio-inner {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--bg2); display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+  }
+  .bio-link {
+    background: var(--bg3s); border: 1px solid var(--border2); border-radius: 10px;
+    padding: 0.85rem 1.25rem; margin-bottom: 0.5rem; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.12s; color: var(--text); font-size: 14px; font-weight: 500;
+  }
+  .bio-link:hover { background: var(--bg4); }
+
+  /* KYC */
+  .kyc-step {
+    display: flex; gap: 1rem; padding: 1rem; background: var(--bg3s);
+    border-radius: 10px; margin-bottom: 0.75rem;
+    align-items: flex-start; border: 1px solid var(--border);
+  }
+  .kyc-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .kyc-num.done { background: var(--green); }
+  .kyc-num.lock { background: var(--bg4); color: var(--text3); }
+  .kyc-info h4 { font-size: 14px; font-weight: 600; color: var(--text); }
+  .kyc-info p { font-size: 12.5px; color: var(--text3); margin-top: 2px; }
+
+  /* Notifications */
+  .notif-row {
+    display: flex; gap: 12px; padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border); align-items: flex-start;
+  }
+  .notif-row:last-child { border-bottom: none; }
+  .n-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .n-title { font-size: 13.5px; color: var(--text); font-weight: 500; }
+  .n-time { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* Toggle switch */
+  .toggle {
+    width: 40px; height: 22px; border-radius: 11px;
+    cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0;
+    border: 1px solid var(--border2);
+  }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle.off { background: var(--bg4); }
+  .toggle-knob {
+    width: 16px; height: 16px; background: #fff; border-radius: 50%;
+    position: absolute; top: 2px; transition: left 0.2s;
+  }
+  .toggle.on .toggle-knob { left: 20px; }
+  .toggle.off .toggle-knob { left: 2px; }
+
+  /* Subscription row */
+  .sub-row {
+    display: flex; align-items: center; padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border); gap: 1rem;
+  }
+  .sub-row:last-child { border-bottom: none; }
+
+  /* ─── PRICING CARDS ─── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .pricing-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 32px rgba(124, 111, 247, 0.1);
+  }
+
+  .pricing-card.popular {
+    border-color: var(--accent);
+    transform: scale(1.02);
+  }
+
+  .pricing-card.current {
+    border-color: var(--green);
+    background: var(--greenbg);
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: white;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .current-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green);
+    color: white;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .plan-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .plan-header h3 {
+    font-family: var(--syne);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  .plan-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .price-amount {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .price-period {
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  .plan-features {
+    margin-bottom: 2rem;
+  }
+
+  .plan-features ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  .feature-icon {
+    color: var(--green);
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .plan-action {
+    text-align: center;
+  }
+
+  .current-plan-btn {
+    background: var(--green);
+    color: white;
+    cursor: default;
+  }
+
+  .current-plan-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .current-plan-info h3 {
+    font-family: var(--syne);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  .plan-status {
+    font-size: 14px;
+    margin-bottom: 0.5rem;
+  }
+
+  .plan-status.active {
+    color: var(--green);
+  }
+
+  .plan-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ─── FAQ ─── */
+  .faq-section {
+    margin-top: 3rem;
+  }
+
+  .faq-section h2 {
+    font-family: var(--syne);
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .faq-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  .faq-question {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 1.25rem;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.2s ease;
+  }
+
+  .faq-question:hover {
+    background: var(--bg3s);
+  }
+
+  .faq-toggle {
+    font-size: 18px;
+    color: var(--accent);
+    transition: transform 0.2s ease;
+  }
+
+  .faq-answer {
+    padding: 0 1.25rem 1.25rem;
+    color: var(--text2);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-title {
+    font-family: var(--syne);
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  .page-subtitle {
+    font-size: 16px;
+    color: var(--text2);
+  }
+
+  /* ─── PAYMENT FORM ─── */
+  .payment-modal {
+    max-width: 500px;
+  }
+
+  .payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .card-element {
+    background: var(--bg3s);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1rem;
+    color: var(--text);
+  }
+
+  .payment-error {
+    background: var(--redbg);
+    border: 1px solid var(--red);
+    color: var(--red);
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    font-size: 14px;
+  }
+
+  .payment-processing {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text2);
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--text3);
+    border-top: 2px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .features-grid, .pricing-grid { grid-template-columns: 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .features-grid, .pricing-grid, .grid-3 { grid-template-columns: 1fr; }
+    .hero-title { font-size: 32px; }
+    .nav-btn.ghost { display: none; }
+    .page { padding: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast-area"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const S = {
+  route: 'landing',
+  page: 'overview',
+  user: null,
+  authTab: 'login',
+  authRole: 'creator',
+  modal: null,
+  modalData: null,
+  products: [],
+  orders: [],
+  notifications: [],
+  stats: {},
+  kycPending: [],
+  toggles: { t0:true,t1:true,t2:false,t3:true,t4:false }
+};
+
+// ══════════════════════════════════════════════
+//  REAL-TIME DATA LOADING
+// ══════════════════════════════════════════════
+async function loadUserData() {
+  if (!S.user) return;
+  
+  try {
+    // Load user's products
+    const productsRes = await API.products.getMine();
+    if (productsRes.success) {
+      S.products = productsRes.products || [];
+    }
+    
+    // Load user's orders
+    const ordersRes = await API.orders.getMine();
+    if (ordersRes.success) {
+      S.orders = ordersRes.orders || [];
+    }
+    
+    // Load notifications
+    const notifsRes = await API.notifications.getMine();
+    if (notifsRes.success) {
+      S.notifications = notifsRes.notifications || [];
+    }
+    
+    // Load user stats
+    const statsRes = await API.analytics.getMyStats();
+    if (statsRes.success) {
+      S.stats = { ...S.stats, ...statsRes.stats };
+    }
+    
+    // Load KYC pending if admin
+    if (S.user.role === 'admin') {
+      const kycRes = await API.kyc.getPending();
+      if (kycRes.success) {
+        S.kycPending = kycRes.pendingKYC || [];
+      }
+      
+      // Load platform stats for admin
+      const platformStatsRes = await API.analytics.platform();
+      if (platformStatsRes.success) {
+        S.stats = { ...S.stats, ...platformStatsRes.stats };
+      }
+    }
+    
+  } catch (error) {
+    console.error('Failed to load user data:', error);
+  }
+}
+
+async function loadMarketplaceData() {
+  try {
+    const productsRes = await API.products.getPublic();
+    if (productsRes.success) {
+      S.products = productsRes.products || [];
+    }
+  } catch (error) {
+    console.error('Failed to load marketplace data:', error);
+  }
+}
+
+async function loadPlatformStats() {
+  try {
+    const statsRes = await API.analytics.getPlatformStats();
+    if (statsRes.success) {
+      S.stats = { ...S.stats, ...statsRes.stats };
+    }
+  } catch (error) {
+    console.error('Failed to load platform stats:', error);
+  }
+}
+
+// Product management functions
+async function editProduct(productId) {
+  const product = S.products.find(p => p._id === productId);
+  if (product) {
+    openModal('addProduct', product);
+  }
+}
+
+async function previewProduct(productId) {
+  const product = S.products.find(p => p._id === productId);
+  if (product) {
+    // Open product in new tab or modal
+    window.open(`/products/${product.slug}`, '_blank');
+  }
+}
+
+async function publishProduct(productId) {
+  try {
+    const res = await API.products.update(productId, { status: 'active' });
+    if (res.success) {
+      toast('Product published successfully! 🎉', 'success');
+      await loadUserData(); // Refresh data
+    } else {
+      toast(res.message || 'Failed to publish product', 'error');
+    }
+  } catch (error) {
+    toast('Failed to publish product', 'error');
+  }
+}
+
+async function loadAnalyticsData(period) {
+  try {
+    const res = await API.analytics.creator({ period });
+    if (res.success) {
+      S.analytics = res.analytics;
+      render(); // Re-render with new data
+    }
+  } catch (error) {
+    toast('Failed to load analytics data', 'error');
+  }
+}
+
+function getProductIcon(type) {
+  const icons = {
+    course: '📚',
+    template: '📋',
+    ebook: '📖',
+    presets: '📷',
+    file_bundle: '📦',
+    coaching: '💬',
+    subscription: '♻️'
+  };
+  return icons[type] || '📦';
+}
+// Marketplace functions
+async function filterProducts(category) {
+  try {
+    const res = await API.products.getPublic(category !== 'all' ? { type: category } : {});
+    if (res.success) {
+      S.products = res.products || [];
+      render(); // Re-render with filtered products
+    }
+  } catch (error) {
+    toast('Failed to filter products', 'error');
+  }
+}
+
+async function sortProducts(sortBy) {
+  try {
+    const res = await API.products.getPublic({ sort: sortBy });
+    if (res.success) {
+      S.products = res.products || [];
+      render(); // Re-render with sorted products
+    }
+  } catch (error) {
+    toast('Failed to sort products', 'error');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  RENDER ENGINE
+// ══════════════════════════════════════════════
+function render() {
+  const app = document.getElementById('app');
+  if (S.route === 'landing') {
+    app.innerHTML = renderLanding();
+    loadPlatformStats(); // Load real platform stats
+  } else if (S.route === 'auth') {
+    app.innerHTML = renderAuth();
+  } else {
+    app.innerHTML = renderDashboard();
+    if (S.user) {
+      if (S.page === 'marketplace') {
+        loadMarketplaceData(); // Load public products
+      } else {
+        loadUserData(); // Load user-specific data
+      }
+    }
+  }
+  if (S.modal) document.body.insertAdjacentHTML('beforeend', renderModal());
+  bindAll();
+}
+
+// ══════════════════════════════════════════════
+//  LANDING PAGE
+// ══════════════════════════════════════════════
+function renderLanding() {
+  return `
+  ${navLanding()}
+  <section class="hero">
+    <div class="hero-tag">✦ The Modern Creator Economy Platform</div>
+    <h1 class="hero-title">Monetize your content.<br><span class="hl">Own your audience.</span></h1>
+    <p class="hero-sub">CreateHub gives creators everything they need — sell digital products, build a stunning link-in-bio, and grow sustainable income. No code. No limits.</p>
+    <div class="hero-cta">
+      <button class="hero-btn primary" onclick="go('auth')">Start for free →</button>
+      <button class="hero-btn secondary" onclick="go('auth')">Browse marketplace</button>
+    </div>
+  </section>
+  <div class="stats-banner">
+    ${[
+      [S.stats.totalCreators || '1K+', 'Active creators'],
+      [S.stats.totalRevenue || '$50K+', 'Paid out monthly'], 
+      [S.stats.totalCustomers || '100K+', 'End customers'],
+      ['99.9%', 'Uptime SLA']
+    ].map(([n,l])=>`
+      <div class="stat-item"><div class="stat-num">${n}</div><div class="stat-lbl">${l}</div></div>
+    `).join('')}
+  </div>
+  <div class="features-section" id="features">
+    <div class="section-header">
+      <div class="section-tag">Platform Features</div>
+      <h2 class="section-title">Everything a creator needs</h2>
+      <p class="section-sub">One platform. Zero friction. Complete control.</p>
+    </div>
+    <div class="features-grid">
+      ${[
+        {icon:'🛒',t:'Digital Products',d:'Sell courses, templates, eBooks, presets, and file bundles with instant automated delivery worldwide.'},
+        {icon:'🔗',t:'Link-in-Bio Pages',d:'Build a beautiful, branded landing page. Add all your links, products, and social profiles in one place.'},
+        {icon:'📊',t:'Real-Time Analytics',d:'Track revenue, page views, conversion rates, subscriber growth, and traffic sources live.'},
+        {icon:'🔐',t:'KYC Verification',d:'Identity-verified creators unlock full monetization, higher payout limits, and a verified badge.'},
+        {icon:'💳',t:'Global Payments',d:'Accept payments worldwide via Stripe or PayPal with instant processing, auto-currency conversion, and low fees.'},
+        {icon:'🛡️',t:'Admin & Compliance',d:'Robust admin panel for platform oversight, user management, KYC review, and regulatory compliance.'},
+      ].map(f=>`<div class="feature-card"><div class="f-icon">${f.icon}</div><div class="f-title">${f.t}</div><p class="f-desc">${f.d}</p></div>`).join('')}
+    </div>
+  </div>
+  <div class="pricing-section" id="pricing">
+    <div class="section-header">
+      <div class="section-tag">Pricing</div>
+      <h2 class="section-title">Start free. Scale as you grow.</h2>
+      <p class="section-sub">No hidden fees, no surprise charges.</p>
+    </div>
+    <div class="pricing-grid">
+      ${[
+        { 
+          name:'CreateHub Starter', 
+          price:'$0', 
+          per:'/month', 
+          feats:['Basic link-in-bio page','Up to 5 products','Basic analytics','CreateHub branding','15% platform commission'], 
+          cta:'Start free', 
+          style:'out', 
+          feat:false 
+        },
+        { 
+          name:'CreateHub Pro', 
+          price:'$9', 
+          per:'/month', 
+          feats:['Unlimited products','Remove CreateHub branding','Custom page themes','Sales analytics','0% commission'], 
+          cta:'Get Pro', 
+          style:'main', 
+          feat:true, 
+          badge:'MOST POPULAR' 
+        },
+        { 
+          name:'CreateHub Business', 
+          price:'$19', 
+          per:'/month', 
+          feats:['Everything in Pro','Advanced analytics','Email capture tools','Custom domain support','Marketing integrations'], 
+          cta:'Get Business', 
+          style:'out', 
+          feat:false 
+        },
+        { 
+          name:'CreateHub Premium', 
+          price:'$39', 
+          per:'/month', 
+          feats:['Everything in Business','API access','Advanced customization','Premium themes','Priority support'], 
+          cta:'Get Premium', 
+          style:'out', 
+          feat:false 
+        },
+      ].map(p=>`
+        <div class="plan-card ${p.feat?'featured':''}">
+          ${p.badge?`<div class="plan-pop">${p.badge}</div>`:''}
+          <div class="plan-name">${p.name}</div>
+          <div class="plan-price">${p.price}<span class="per">${p.per}</span></div>
+          ${p.feats.map(f=>`<div class="plan-feat"><span class="ck">✓</span>${f}</div>`).join('')}
+          <button class="plan-cta ${p.style}" onclick="go('auth')">${p.cta}</button>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+  <footer class="landing-footer">© 2025 <span>CreateHub</span> · Built for creators worldwide</footer>`;
+}
+
+function navLanding() {
+  return `<nav class="nav">
+    <div class="nav-logo" onclick="go('landing')">Create<span>Hub</span></div>
+    <div class="nav-links">
+      <button class="nav-btn ghost" onclick="scrollTo('features')">Features</button>
+      <button class="nav-btn ghost" onclick="scrollTo('pricing')">Pricing</button>
+      <button class="nav-btn outline" onclick="go('auth')">Sign in</button>
+      <button class="nav-btn primary" onclick="go('auth')">Get started free</button>
+    </div>
+  </nav>`;
+}
+
+// ══════════════════════════════════════════════
+//  AUTH PAGE
+// ══════════════════════════════════════════════
+function renderAuth() {
+  const t = S.authTab, r = S.authRole;
+  return `
+  <nav class="nav">
+    <div class="nav-logo" onclick="go('landing')">Create<span>Hub</span></div>
+  </nav>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">Create<span>Hub</span></div>
+      <p class="auth-sub">${t==='login'?'Welcome back. Sign in to continue.':'Join the creator economy today.'}</p>
+      <div class="auth-tabs">
+        <div class="auth-tab ${t==='login'?'active':''}" onclick="setAuthTab('login')">Sign in</div>
+        <div class="auth-tab ${t==='register'?'active':''}" onclick="setAuthTab('register')">Create account</div>
+      </div>
+      ${t==='register'?`
+        <label style="margin-bottom:8px">I'm joining as</label>
+        <div class="role-select">
+          <div class="role-option ${r==='creator'?'sel':''}" onclick="setRole('creator')">
+            <div class="r-icon">🎨</div>
+            <div class="r-name">Creator</div>
+            <div class="r-desc">Sell products & content</div>
+          </div>
+          <div class="role-option ${r==='public'?'sel':''}" onclick="setRole('public')">
+            <div class="r-icon">👤</div>
+            <div class="r-name">Buyer</div>
+            <div class="r-desc">Discover & purchase</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>First name</label><input placeholder="Amara"/></div>
+          <div class="form-group"><label>Last name</label><input placeholder="Osei"/></div>
+        </div>
+      `:''}
+      <div class="form-group"><label>Email address</label><input type="email" placeholder="you@example.com" id="ae"/></div>
+      <div class="form-group"><label>Password</label><input type="password" placeholder="••••••••" id="ap"/></div>
+      <button class="btn btn-primary w100" style="padding:12px;font-size:15px;justify-content:center" onclick="doAuth('${r}')">
+        ${t==='login'?'Sign in →':'Create account →'}
+      </button>
+      ${t==='login'?`
+        <div class="auth-divider">or continue with</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-outline w100" style="justify-content:center;font-size:13px" onclick="doAuth('creator')">🎨 Creator</button>
+          <button class="btn btn-outline w100" style="justify-content:center;font-size:13px" onclick="doAuth('public')">� Buyer</button>
+        </div>
+      `:''}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD SHELL
+// ══════════════════════════════════════════════
+function renderDashboard() {
+  const u = S.user, p = S.page, isAdmin = u.role === 'admin';
+  const unreadCount = S.notifs.filter(n=>!n.read).length;
+  return `
+  <nav class="nav">
+    <div class="nav-logo" onclick="go('landing')">Create<span>Hub</span></div>
+    <span class="nav-pill">${isAdmin?'Admin Panel':'Creator Studio'}</span>
+    <div class="nav-links">
+      <button class="notif-btn" onclick="setPage('notifications')">
+        🔔${unreadCount>0?`<span class="notif-dot"></span>`:''}
+      </button>
+      <div class="nav-profile" onclick="openModal('profile')">
+        <div class="avatar" style="background:${u.clr};width:26px;height:26px;font-size:11px">${u.name[0]}</div>
+        <span style="font-size:13px;font-weight:500">${u.name}</span>
+        <span style="color:var(--text3);font-size:12px">▾</span>
+      </div>
+    </div>
+  </nav>
+  <div class="shell">
+    <nav class="sidebar">
+      ${isAdmin ? sidebarAdmin(p) : sidebarCreator(p)}
+      <div class="sidebar-footer">
+        <button class="btn btn-outline w100" style="justify-content:center;font-size:12.5px" onclick="logout()">Sign out</button>
+      </div>
+    </nav>
+    <div class="main">
+      <div class="page" id="page-content">
+        ${renderPage(p)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function sidebarCreator(p) {
+  const unread = S.notifs.filter(n=>!n.read).length;
+  return `
+  <div class="sidebar-section">Creator</div>
+  ${si('overview','🏠','Overview',p)}
+  ${si('products','📦','My Products',p)}
+  ${si('marketplace','🛍️','Marketplace',p)}
+  ${si('link-bio','🔗','Link in Bio',p)}
+  ${si('analytics','📈','Analytics',p)}
+  ${si('plans','⭐','Plans',p)}
+  ${si('kyc','🔐','KYC Verification',p)}
+  <div class="sidebar-section">Account</div>
+  ${si('notifications','🔔','Notifications',p, unread||'')}
+  ${si('settings','⚙️','Settings',p)}`;
+}
+
+function sidebarPublic(p) {
+  return `
+  <div class="sidebar-section">Discover</div>
+  ${si('marketplace','🛍️','Marketplace',p)}
+  ${si('link-bio','🔗','Browse Creators',p)}
+  <div class="sidebar-section">Account</div>
+  ${si('settings','⚙️','Settings',p)}`;
+}
+
+function sidebarAdmin(p) {
+  return `
+  <div class="sidebar-section">Platform</div>
+  ${si('overview','📊','Overview',p)}
+  ${si('users','👥','Users',p)}
+  ${si('analytics','📈','Analytics',p)}
+  ${si('kyc-review','🔐','KYC Review',p, S.kycPending.length)}
+  ${si('transactions','💳','Transactions',p)}
+  <div class="sidebar-section">Config</div>
+  ${si('notifications','🔔','Notifications',p)}
+  ${si('settings','⚙️','Platform Config',p)}`;
+}
+
+function si(id, icon, label, page, badge) {
+  return `<div class="s-item ${page===id?'active':''}" onclick="setPage('${id}')">
+    <span class="s-icon">${icon}</span>${label}
+    ${badge?`<span class="s-badge">${badge}</span>`:''}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  PAGES
+// ══════════════════════════════════════════════
+function renderPage(p) {
+  const u = S.user;
+  const isAdmin = u && u.role === 'admin';
+  switch(p) {
+    case 'overview':      return isAdmin ? pageAdminOverview() : pageCreatorOverview();
+    case 'products':      return pageProducts();
+    case 'marketplace':   return pageMarketplace();
+    case 'link-bio':      return pageLinkBio();
+    case 'analytics':     return pageAnalytics();
+    case 'plans':         return pagePlans();
+    case 'kyc':           return pageKYC();
+    case 'users':         return pageUsers();
+    case 'kyc-review':    return pageKYCReview();
+    case 'transactions':  return pageTransactions();
+    case 'notifications': return pageNotifications();
+    case 'settings':      return pageSettings();
+    default:              return pagePlans(); // Default to plans page
+  }
+}
+
+/* ── Creator Overview ── */
+function pageCreatorOverview() {
+  const name = S.user.name.split(' ')[0];
+  const bars = [42,68,30,82,54,91,74];
+  return `
+  <div class="ph"><div class="ph-left">
+    <div class="ph-title">Good morning, ${name} 👋</div>
+    <div class="ph-sub">Here's a snapshot of your creator account.</div>
+  </div></div>
+  <div class="stats-grid">
+    ${sc('Total Revenue','$6,240','↑ +18% this month','up')}
+    ${sc('Total Sales','823','↑ +42 this week','up')}
+    ${sc('Subscribers','1,204','↑ +23 this week','up')}
+    ${sc('Page Views','8,910','↓ −3% vs last week','dn')}
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Revenue — last 7 days</div>
+      <div class="bar-chart" style="height:80px">
+        ${bars.map(h=>`<div class="bar" style="height:${h}%;background:var(--accent)"></div>`).join('')}
+      </div>
+      <div class="chart-labels">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<span>${d}</span>`).join('')}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Products</div>
+      ${S.products.slice(0,3).map(p=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:18px">${p.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13.5px;color:var(--text);font-weight:500">${p.name}</div>
+            <div class="pbar"><div class="pfill" style="width:${Math.round(p.sales/4)}%"></div></div>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--text2)">${p.sales}</div>
+        </div>
+      `).join('')}
+      <button class="btn btn-outline btn-sm mt-2" onclick="setPage('products')">All products →</button>
+    </div>
+  </div>
+  <div class="card mt-2">
+    <div style="display:flex;align-items:center;gap:14px;padding:0.85rem;background:var(--greenbg);border-radius:9px;border:1px solid #123020">
+      <span style="font-size:26px">✅</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;color:var(--green)">Identity Verified — All monetization features unlocked</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:2px">Your KYC was approved on Jan 15, 2025. Next review: Jan 2026.</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="setPage('kyc')">Details</button>
+    </div>
+  </div>`;
+}
+
+/* ── Admin Overview ── */
+function pageAdminOverview() {
+  const stats = S.stats || {};
+  return `
+  <div class="ph"><div class="ph-left"><div class="ph-title">Platform Overview</div><div class="ph-sub">Monitor and manage the CreateHub platform.</div></div>
+  <button class="btn btn-primary" onclick="exportReport()">Export report</button>
+  </div>
+  <div class="stats-grid">
+    ${sc('Total Users', stats.totalUsers || '0', 'All registered users', 'up')}
+    ${sc('Total Creators', stats.totalCreators || '0', 'Active creators', 'up')}
+    ${sc('Platform Revenue', '$' + (stats.totalRevenue || '0'), 'Total platform revenue', 'up')}
+    ${sc('Pending KYC', S.kycPending.length || '0', 'KYC applications pending', 'dn')}
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Recent users</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Role</th><th>Joined</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text3)">User list loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Platform activity</div>
+      <div style="padding:1rem">
+        <div style="font-size:14px;color:var(--text2);margin-bottom:8px">Daily active users</div>
+        <div style="font-size:24px;font-weight:700;color:var(--text)">${stats.dailyActiveUsers || 'N/A'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── Products ── */
+function pageProducts() {
+  return `
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">My Products</div><div class="ph-sub">Create and manage your digital products.</div></div>
+    <button class="btn btn-primary" onclick="openModal('addProduct')">+ New product</button>
+  </div>
+  <div class="grid-2">
+    ${S.products.length > 0 ? S.products.map(p=>`
+      <div class="product-card">
+        <div class="prod-thumb">${getProductIcon(p.type)}</div>
+        <div class="prod-body">
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-meta"><span>${p.type}</span>${stBadge(p.status)}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem">
+            <div class="prod-price">${p.pricing?.isFree ? 'Free' : '$' + p.pricing?.amount}</div>
+            <div style="font-size:12.5px;color:var(--text2)">${p.stats?.sales || 0} sales</div>
+          </div>
+          <div class="prod-actions">
+            <button class="btn btn-outline btn-sm" onclick="editProduct('${p._id}')">Edit</button>
+            <button class="btn btn-outline btn-sm" onclick="previewProduct('${p._id}')">Preview</button>
+            ${p.status==='draft'?`<button class="btn btn-success btn-sm" onclick="publishProduct('${p._id}')">Publish</button>`:''}
+          </div>
+        </div>
+      </div>
+    `).join('') : `
+      <div class="product-card" style="display:flex;align-items:center;justify-content:center;min-height:200px;cursor:pointer;border-style:dashed" onclick="openModal('addProduct')">
+        <div style="text-align:center;color:var(--text3)">
+          <div style="font-size:30px;margin-bottom:8px">+</div>
+          <div style="font-size:14px;font-weight:500">Add new product</div>
+        </div>
+      </div>
+    `}
+  </div>`;
+}
+
+/* ── Marketplace ── */
+function pageMarketplace() {
+  return `
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Marketplace</div><div class="ph-sub">Discover products from talented creators.</div></div>
+    <div style="display:flex;gap:8px">
+      <select class="btn btn-outline btn-sm" style="padding:6px 12px" onchange="filterProducts(this.value)">
+        <option value="all">All Categories</option>
+        <option value="course">Course</option>
+        <option value="template">Template</option>
+        <option value="ebook">eBook</option>
+        <option value="presets">Presets</option>
+      </select>
+      <select class="btn btn-outline btn-sm" style="padding:6px 12px" onchange="sortProducts(this.value)">
+        <option value="popular">Sort by Popular</option>
+        <option value="price-low">Price: Low to High</option>
+        <option value="price-high">Price: High to Low</option>
+        <option value="newest">Newest First</option>
+      </select>
+    </div>
+  </div>
+  <div class="grid-3" id="marketplace-products">
+    ${S.products.length > 0 ? S.products.map(p=>`
+      <div class="product-card">
+        <div class="prod-thumb">${getProductIcon(p.type)}</div>
+        <div class="prod-body">
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-meta">
+            <span>${p.type}</span>
+            <span>⭐ ${p.rating || '4.5'}</span>
+            <span>${p.stats?.sales || 0} sold</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem">
+            <div class="prod-price">${p.pricing?.isFree ? 'Free' : '$' + p.pricing?.amount}</div>
+            <div style="font-size:12.5px;color:var(--text2)">by ${p.creator?.name || 'Creator'}</div>
+          </div>
+          <div class="prod-actions">
+            <button class="btn btn-outline btn-sm" onclick="previewProduct('${p._id}')">Preview</button>
+            <button class="btn btn-primary btn-sm" onclick="initiatePayment({id:'${p._id}', name:'${p.name}', price:'${p.pricing?.isFree ? 'Free' : '$' + p.pricing?.amount}', icon:'${getProductIcon(p.type)}'})">Buy Now</button>
+          </div>
+        </div>
+      </div>
+    `).join('') : `
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text3)">
+        <div style="font-size:48px;margin-bottom:1rem">🛍️</div>
+        <div style="font-size:18px;font-weight:600;margin-bottom:0.5rem">No products available</div>
+        <div style="font-size:14px">Check back later for amazing creator products</div>
+      </div>
+    `}
+  </div>`;
+}
+
+/* ── Link in Bio ── */
+function pageLinkBio() {
+  const u = S.user;
+  const slug = u.name.toLowerCase().replace(/\s+/g,'');
+  return `
+  <div class="ph"><div class="ph-left"><div class="ph-title">Link in Bio</div><div class="ph-sub">Customize your public creator page.</div></div>
+    <button class="btn btn-primary" onclick="toast('Changes saved! 🎉','success')">Save changes</button>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card mb-2">
+        <div class="card-title">Profile</div>
+        <div class="form-group"><label>Display name</label><input value="${u.name}"/></div>
+        <div class="form-group"><label>Bio</label><textarea rows="3">Digital creator sharing design tips, templates & insights.</textarea></div>
+        <div class="form-group"><label>Page URL</label>
+          <div style="display:flex;align-items:center;border:1px solid var(--border2);border-radius:8px;overflow:hidden">
+            <span style="padding:9px 12px;background:var(--bg4);color:var(--text3);font-size:13px;border-right:1px solid var(--border2);white-space:nowrap">createhub.io/</span>
+            <input style="border:none;border-radius:0;background:var(--bg3s)" value="${slug}"/>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:0.75rem">Links</div>
+        ${[{icon:'🐦',label:'Twitter',url:'twitter.com/creator'},{icon:'📸',label:'Instagram',url:'instagram.com/creator'},{icon:'▶️',label:'YouTube',url:'youtube.com/creator'}].map(l=>`
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:0.75rem">
+            <span style="font-size:18px;flex-shrink:0">${l.icon}</span>
+            <input value="${l.url}" style="flex:1"/>
+            <button class="btn btn-outline btn-sm" onclick="toast('Link removed','info')">✕</button>
+          </div>
+        `).join('')}
+        <button class="btn btn-outline btn-sm" onclick="toast('Link added','success')">+ Add link</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10.5px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:0.75rem">Live preview</div>
+      <div class="bio-preview">
+        <div class="bio-ring"><div class="bio-inner">✨</div></div>
+        <div style="font-family:var(--syne);font-size:19px;font-weight:800;margin-bottom:4px">${u.name}</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">Digital creator sharing design tips, templates & insights.</div>
+        ${S.products.filter(p=>p.status==='active').map(p=>`
+          <div class="bio-link"><span>${p.icon}</span><span>${p.name}</span><span style="margin-left:auto;color:var(--green);font-weight:700">${p.price}</span></div>
+        `).join('')}
+        <div class="bio-link">🐦 <span>Twitter</span></div>
+        <div class="bio-link">📸 <span>Instagram</span></div>
+        <div class="bio-link">▶️ <span>YouTube</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1.25rem">createhub.io/${slug}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── Analytics ── */
+function pageAnalytics() {
+  const stats = S.stats || {};
+  const analytics = S.analytics || {};
+  
+  return `
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Analytics</div><div class="ph-sub">Track your performance across all products.</div></div>
+    <div style="display:flex;gap:6px">
+      ${['7D','30D','90D','1Y'].map((t,i)=>`<button class="btn btn-outline btn-sm ${i===1?'btn-primary':''}" onclick="loadAnalyticsData('${t.toLowerCase()}')">${t}</button>`).join('')}
+    </div>
+  </div>
+  <div class="stats-grid">
+    ${sc('Total Revenue','$' + (stats.totalRevenue || '0'), 'All time revenue', 'up')}
+    ${sc('Avg Order Value','$' + (stats.avgProductPrice || '0'), 'Average per sale', 'up')}
+    ${sc('Total Sales', stats.totalSales || '0', 'Products sold', 'up')}
+    ${sc('Conversion Rate','3.2%', 'Visitor to buyer', 'up')}
+  </div>
+  <div class="card mb-2">
+    <div class="card-title">Revenue Breakdown</div>
+    ${S.products.length > 0 ? S.products.map(p=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13.5px;color:var(--text)">${p.name}</span>
+        <span style="font-size:13.5px;color:var(--green);font-weight:600">$${p.stats?.revenue || 0}</span>
+      </div>
+    `).join('') : '<div style="text-align:center;padding:2rem;color:var(--text3)">No sales data available</div>'}
+  </div>
+  <div class="card">
+    <div class="card-title">Recent Activity</div>
+    ${S.orders.slice(0, 5).map(order => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13.5px;color:var(--text)">${order.product?.name || 'Product'}</span>
+        <span style="font-size:13.5px;color:var(--green);font-weight:600">$${order.pricing?.subtotal || 0}</span>
+      </div>
+    `).join('') || '<div style="text-align:center;padding:2rem;color:var(--text3)">No recent orders</div>'}
+  </div>`;
+}
+
+/* ── Plans ── */
+function pagePlans() {
+  const user = S.user;
+  const isCreator = user?.role === 'creator';
+  const currentPlan = user?.subscription?.plan || 'starter'; // Get from user object
+  const currentStatus = user?.subscription?.status || 'active';
+  
+  const plans = {
+    starter: {
+      name: 'CreateHub Starter',
+      price: 0,
+      features: [
+        'Basic CreateHub link-in-bio page',
+        'Up to 5 products or links',
+        'Basic analytics',
+        'CreateHub branding displayed',
+        'Creator storefront',
+        '15% platform commission on each sale'
+      ]
+    },
+    pro: {
+      name: 'CreateHub Pro',
+      price: 9,
+      features: [
+        'Unlimited products and links',
+        'Remove CreateHub branding',
+        'Custom page themes',
+        'Sales analytics',
+        'Creator store page',
+        '0% commission on sales'
+      ]
+    },
+    business: {
+      name: 'CreateHub Business',
+      price: 19,
+      features: [
+        'Everything in Pro',
+        'Advanced analytics dashboard',
+        'Email capture tools',
+        'Custom domain support',
+        'Marketing integrations',
+        'Creator storefront tools',
+        '0% commission'
+      ]
+    },
+    premium: {
+      name: 'CreateHub Premium',
+      price: 39,
+      features: [
+        'Everything in Business',
+        'API access',
+        'Advanced customization',
+        'Premium themes',
+        'Automation tools',
+        'Priority support',
+        '0% commission'
+      ]
+    }
+  };
+
+  return `
+    <div class="page">
+      <div class="page-header">
+        <h1 class="page-title">CreateHub Plans</h1>
+        <p class="page-subtitle">Choose the perfect plan for your creator journey</p>
+      </div>
+      
+      ${isCreator ? `
+        <div class="current-plan-card">
+          <div class="current-plan-info">
+            <h3>Current Plan: ${plans[currentPlan].name}</h3>
+            <p class="plan-status ${currentStatus}">
+              Status: ${currentStatus === 'active' ? '✅ Active' : '⚠️ ' + currentStatus}
+            </p>
+            ${plans[currentPlan].price > 0 ? `<p class="plan-price">$${plans[currentPlan].price}/month</p>` : ''}
+          </div>
+          ${currentPlan !== 'starter' && currentStatus === 'active' ? `
+            <button class="btn outline" onclick="toast('Cancelling subscription...', 'info')">
+              Cancel Plan
+            </button>
+          ` : ''}
+        </div>
+      ` : ''}
+      
+      <div class="pricing-grid">
+        ${Object.entries(plans).map(([planKey, plan]) => {
+          const isCurrentPlan = planKey === currentPlan;
+          const isPopular = planKey === 'pro';
+          const canUpgrade = isCreator && !isCurrentPlan && currentStatus === 'active';
+          
+          return `
+            <div class="pricing-card ${isCurrentPlan ? 'current' : ''} ${isPopular ? 'popular' : ''}">
+              ${isPopular ? '<div class="popular-badge">Most Popular</div>' : ''}
+              ${isCurrentPlan ? '<div class="current-badge">Current Plan</div>' : ''}
+              
+              <div class="plan-header">
+                <h3>${plan.name}</h3>
+                <div class="plan-price">
+                  <span class="price-amount">$${plan.price}</span>
+                  <span class="price-period">${plan.price === 0 ? 'Free' : '/month'}</span>
+                </div>
+              </div>
+              
+              <div class="plan-features">
+                <ul>
+                  ${plan.features.map(feature => `
+                    <li>
+                      <span class="feature-icon">✓</span>
+                      ${feature}
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+              
+              <div class="plan-action">
+                ${isCurrentPlan ? (
+                  '<button class="btn secondary current-plan-btn">Current Plan</button>'
+                ) : canUpgrade ? (
+                  `<button class="btn primary" onclick="handlePlanUpgrade('${planKey}', ${plan.price})">
+                    ${plan.price === 0 ? 'Downgrade to Starter' : 'Upgrade to ' + plan.name}
+                  </button>`
+                ) : (
+                  '<button class="btn outline" onclick="toast(\'Please sign in as a creator to upgrade\', \'info\')">Sign up to Choose Plan</button>'
+                )}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-list">
+          ${[
+            {
+              q: 'Can I change plans anytime?',
+              a: 'Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.'
+            },
+            {
+              q: 'What happens if I downgrade?',
+              a: 'If you downgrade to a plan with fewer features, you\'ll need to remove any excess products or disable features that exceed the new plan limits.'
+            },
+            {
+              q: 'Do you offer refunds?',
+              a: 'We offer a 30-day money-back guarantee for paid plans. Contact support if you\'re not satisfied.'
+            },
+            {
+              q: 'What payment methods do you accept?',
+              a: 'We accept all major credit cards through Stripe. Payment processing is secure and encrypted.'
+            },
+            {
+              q: 'Is there a long-term contract?',
+              a: 'No, all plans are month-to-month. You can cancel anytime without penalties.'
+            }
+          ].map((faq, index) => `
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFAQ(${index})">
+                ${faq.q}
+                <span class="faq-toggle">+</span>
+              </button>
+              <div class="faq-answer" id="faq-answer-${index}" style="display:none">
+                <p>${faq.a}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Handle plan upgrade
+function handlePlanUpgrade(planKey, price) {
+  if (price === 0) {
+    // Downgrade to starter
+    if (confirm('Are you sure you want to downgrade to the Starter plan? You will lose access to premium features.')) {
+      API.subscriptions.upgrade({ plan: planKey })
+        .then(res => {
+          if (res.success) {
+            toast('Successfully downgraded to Starter plan', 'success');
+            // Update user object
+            if (S.user) {
+              S.user.subscription = res.subscription;
+            }
+            render();
+          } else {
+            toast(res.message || 'Failed to downgrade plan', 'error');
+          }
+        })
+        .catch(err => {
+          console.error('Plan upgrade error:', err);
+          toast('Failed to update plan', 'error');
+        });
+    }
+  } else {
+    // Upgrade to paid plan
+    if (confirm(`Upgrade to ${planKey.charAt(0).toUpperCase() + planKey.slice(1)} plan for $${price}/month?`)) {
+      API.subscriptions.upgrade({ plan: planKey })
+        .then(res => {
+          if (res.success) {
+            toast(`Successfully upgraded to ${planKey.charAt(0).toUpperCase() + planKey.slice(1)} plan! 🎉`, 'success');
+            // Update user object
+            if (S.user) {
+              S.user.subscription = res.subscription;
+            }
+            render();
+          } else {
+            toast(res.message || 'Failed to upgrade plan', 'error');
+          }
+        })
+        .catch(err => {
+          console.error('Plan upgrade error:', err);
+          toast('Failed to update plan', 'error');
+        });
+    }
+  }
+}
+
+function toggleFAQ(index) {
+  const faqItems = document.querySelectorAll('.faq-item');
+  const item = faqItems[index];
+  if (item) {
+    const answer = item.querySelector('.faq-answer');
+    const icon = item.querySelector('.faq-icon');
+    
+    if (answer.style.display === 'block') {
+      answer.style.display = 'none';
+      icon.textContent = '+';
+    } else {
+      answer.style.display = 'block';
+      icon.textContent = '−';
+    }
+  }
+}
+
+/* ── KYC (Creator) ── */
+function pageKYC() {
+  return `
+  <div class="ph"><div class="ph-left"><div class="ph-title">KYC Verification</div><div class="ph-sub">Identity verification for full monetization access.</div></div></div>
+  <div style="max-width:580px">
+    <div class="card mb-2" style="border-color:var(--green);background:var(--greenbg)">
+      <div style="display:flex;gap:12px;align-items:center">
+        <span style="font-size:28px">✅</span>
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--green)">Verification Complete</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:2px">Your identity is verified. All monetization features are active.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-2">
+      <div class="card-title">Verification Steps</div>
+      ${[
+        {s:'Email Verification',d:'Confirm your email address',st:'done'},
+        {s:'Personal Information',d:'Full name, date of birth, address',st:'done'},
+        {s:'Identity Document',d:'Government-issued ID or passport upload',st:'done'},
+        {s:'Selfie Verification',d:'Photo match with identity document',st:'done'},
+        {s:'Bank Account',d:'Verify payout method',st:'done'},
+      ].map(({s,d,st})=>`
+        <div class="kyc-step">
+          <div class="kyc-num ${st}">✓</div>
+          <div class="kyc-info" style="flex:1"><h4>${s}</h4><p>${d}</p></div>
+          <span class="badge b-green">Complete</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Monetization Limits</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+        ${[['Monthly payout','Unlimited'],['Per transaction','$10,000'],['Products','Unlimited'],['Payout schedule','Weekly']].map(([l,v])=>`
+          <div style="background:var(--bg3s);border-radius:8px;padding:0.85rem">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${l}</div>
+            <div style="font-size:14px;font-weight:600;color:var(--green)">${v}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── Admin: Users ── */
+function pageUsers() {
+  return `
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Users</div><div class="ph-sub">Manage all platform users and creators.</div></div>
+    <button class="btn btn-primary" onclick="openModal('addUser')">+ Invite user</button>
+  </div>
+  <div class="card mb-2" style="padding:0.75rem 1.25rem">
+    <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+      <input placeholder="Search users…" style="width:240px;flex-shrink:0"/>
+      <select style="width:130px"><option>All roles</option><option>Creator</option><option>Public</option><option>Admin</option></select>
+      <select style="width:130px"><option>All statuses</option><option>Active</option><option>Suspended</option></select>
+      <select style="width:130px"><option>All KYC</option><option>Verified</option><option>Pending</option><option>None</option></select>
+    </div>
+  </div>
+  <div class="card" style="padding:0">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>User</th><th>Role</th><th>KYC</th><th>Status</th><th>Revenue</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${S.users.map(u=>`<tr>
+            <td><div class="user-cell"><div class="avatar" style="background:${u.clr};width:32px;height:32px">${u.name[0]}</div><div><div class="u-name">${u.name}</div><div class="u-email">${u.email}</div></div></div></td>
+            <td><span class="badge b-purple">${u.role}</span></td>
+            <td>${kycBadge(u.kyc)}</td>
+            <td>${stBadge(u.status)}</td>
+            <td style="color:var(--green);font-weight:600">${u.revenue}</td>
+            <td>${u.joined}</td>
+            <td><div style="display:flex;gap:5px">
+              <button class="btn btn-outline btn-sm" onclick="toast('Editing ${u.name.split(' ')[0]}…','info')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="toast('${u.name.split(' ')[0]} suspended','error')">Suspend</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.85rem 1rem;border-top:1px solid var(--border)">
+      <span style="font-size:12.5px;color:var(--text3)">Showing ${S.users.length} of 5,482 users</span>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-outline btn-sm">← Prev</button>
+        <button class="btn btn-outline btn-sm">Next →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── Admin: KYC Review ── */
+function pageKYCReview() {
+  return `
+  <div class="ph"><div class="ph-left"><div class="ph-title">KYC Review</div><div class="ph-sub">Review and approve identity verification submissions.</div></div></div>
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    ${sc('Pending Review','23','Needs action','dn')}
+    ${sc('Approved Today','8','↑ +3 vs yesterday','up')}
+    ${sc('Rejected Today','2','— within normal range','neu')}
+  </div>
+  <div class="card">
+    <div class="card-title">Pending submissions</div>
+    ${S.kycPending.map((p,i)=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:1rem;background:var(--bg3s);border-radius:10px;border:1px solid var(--border);margin-bottom:0.75rem">
+        <div class="avatar" style="background:${p.clr};width:42px;height:42px;font-size:15px;flex-shrink:0">${p.name[0]}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;color:var(--text)">${p.name}</div>
+          <div style="font-size:12px;color:var(--text3)">${p.email} · ${p.doc} · Submitted ${p.submitted}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="viewKYCDocuments(${i}, '${p.doc}')">View docs</button>
+        <button class="btn btn-success btn-sm" onclick="kycApprove('${p._id || p.email}')">Approve ✓</button>
+        <button class="btn btn-danger btn-sm" onclick="kycReject('${p._id || p.email}')">Reject</button>
+      </div>
+      </div>
+    `).join('')}
+    ${S.kycPending.length===0?`<div style="text-align:center;padding:2rem;color:var(--text3)">✅ All submissions reviewed. Queue is empty.</div>`:''}
+  </div>`;
+}
+
+/* ── Admin: Transactions ── */
+function pageTransactions() {
+  return `
+  <div class="ph"><div class="ph-left"><div class="ph-title">Transactions</div><div class="ph-sub">Platform transaction history and payouts.</div></div></div>
+  <div class="card">
+    <div class="card-title">Recent Transactions</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>User</th><th>Product</th><th>Amount</th><th>Fee</th><th>Net</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          ${S.orders.length > 0 ? S.orders.slice(0, 10).map(order => `
+            <tr>
+              <td style="font-family:monospace;font-size:12px">#${order._id?.slice(-6) || 'N/A'}</td>
+              <td>${order.buyer?.name || 'Unknown'}</td>
+              <td>${order.product?.name || 'Product'}</td>
+              <td style="color:var(--green)">$${order.pricing?.subtotal || 0}</td>
+              <td>$${order.pricing?.platformFee || 0}</td>
+              <td style="color:var(--green);font-weight:600">$${order.pricing?.creatorNet || 0}</td>
+              <td style="color:var(--text2)">${new Date(order.createdAt).toLocaleDateString()}</td>
+              <td>${stBadge(order.status)}</td>
+            </tr>
+          `).join('') : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text3)">No transactions available</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+/* ── Notifications ── */
+function pageNotifications() {
+  const icons = {success:'✅', info:'ℹ️', default:'•'};
+  const dotColors = {success:'var(--green)', info:'var(--accent)', default:'var(--text3)'};
+  
+  return `
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Notifications</div><div class="ph-sub">Stay updated with your account activity.</div></div>
+    <button class="btn btn-outline" onclick="markAllNotificationsRead()">Mark all read</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Recent notifications</div>
+    ${S.notifications.length > 0 ? S.notifications.map(n=>`
+      <div class="notif-item ${!n.read?'unread':''}" style="display:flex;align-items:start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div style="background:${dotColors[n.type] || dotColors.default};width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px">
+          ${icons[n.type] || icons.default}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:600;color:var(--text);margin-bottom:2px">${n.title}</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:4px">${n.body}</div>
+          <div style="font-size:11px;color:var(--text3)">${new Date(n.createdAt).toLocaleString()}</div>
+        </div>
+        ${!n.read?'<div style="width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0;margin-top:8px"></div>':''}
+      </div>
+    `).join('') : '<div style="text-align:center;padding:3rem;color:var(--text3)">🔔 No notifications</div>'}
+  </div>`;
+}
+
+/* ── Settings ── */
+function pageSettings() {
+  const u = S.user;
+  const isAdmin = u.role === 'admin';
+  const currentPlan = u.subscription?.plan || 'starter';
+  const commissionRate = currentPlan === 'starter' ? 15 : 0;
+  
+  return `
+  <div class="ph"><div class="ph-left"><div class="ph-title">Settings</div><div class="ph-sub">Manage your account preferences.</div></div></div>
+  <div style="max-width:580px">
+    <div class="card mb-2">
+      <div class="card-title">Account details</div>
+      <div class="form-row">
+        <div class="form-group"><label>First name</label><input value="${u.name.split(' ')[0]}"/></div>
+        <div class="form-group"><label>Last name</label><input value="${u.name.split(' ')[1]||''}"/></div>
+      </div>
+      <div class="form-group"><label>Email address</label><input type="email" value="${u.email}"/></div>
+      ${!isAdmin?`<div class="form-group"><label>Creator bio</label><textarea rows="2">Digital creator sharing design tips and resources.</textarea></div>`:''}
+      <button class="btn btn-primary" onclick="toast('Profile updated ✓','success')">Save changes</button>
+    </div>
+    <div class="card mb-2">
+      <div class="card-title">Security</div>
+      <div class="form-group"><label>Current password</label><input type="password" placeholder="••••••••"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>New password</label><input type="password" placeholder="••••••••"/></div>
+        <div class="form-group"><label>Confirm new password</label><input type="password" placeholder="••••••••"/></div>
+      </div>
+      <button class="btn btn-outline" onclick="toast('Password updated ✓','success')">Update password</button>
+    </div>
+    ${!isAdmin?`
+    <div class="card mb-2">
+      <div class="card-title">Subscription Plan</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:0.85rem;background:var(--bg3s);border-radius:9px;border:1px solid var(--border2);margin-bottom:0.75rem">
+        <span style="font-size:20px">⭐</span>
+        <div style="flex:1">
+          <div style="font-size:13.5px;color:var(--text);font-weight:500">CreateHub ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}</div>
+          <div style="font-size:12px;color:var(--text3)">${currentPlan === 'starter' ? 'Free plan · 15% commission · 5 products limit' : 'Paid plan · 0% commission · Unlimited products'}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="setPage('plans')">Upgrade Plan</button>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:0.5rem">
+        Current commission rate: <strong style="color:${commissionRate > 0 ? 'var(--red)' : 'var(--green)'}">${commissionRate}%</strong> on each sale
+      </div>
+    </div>
+    <div class="card mb-2">
+      <div class="card-title">Payout method</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:0.85rem;background:var(--bg3s);border-radius:9px;border:1px solid var(--border2);margin-bottom:0.75rem">
+        <span style="font-size:20px">🏦</span>
+        <div style="flex:1">
+          <div style="font-size:13.5px;color:var(--text);font-weight:500">Bank account ending •••• 4821</div>
+          <div style="font-size:12px;color:var(--text3)">Verified · Weekly payouts · USD</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="openPayoutSettings()">Change</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:0.85rem;background:var(--bg3s);border-radius:9px;border:1px solid var(--border2)">
+        <span style="font-size:20px">💳</span>
+        <div style="flex:1">
+          <div style="font-size:13.5px;color:var(--text);font-weight:500">Stripe Connect</div>
+          <div style="font-size:12px;color:var(--text3)">Connected · Active</div>
+        </div>
+        <span class="badge b-green">Active</span>
+      </div>
+    </div>
+    `:''}
+    <div class="card">
+      <div class="card-title">Notification preferences</div>
+      ${['New subscriber','New sale','Payout processed','KYC updates','Platform announcements'].map((label,i)=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13.5px;color:var(--text)">${label}</span>
+          <div class="toggle ${S.toggles['t'+i]?'on':'off'}" onclick="togglePref(${i})">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+async function kycApprove(userId) {
+  try {
+    const res = await API.kyc.approve(userId);
+    if (res.success) {
+      toast('KYC approved successfully', 'success');
+      await loadUserData(); // Refresh admin data
+    } else {
+      toast(res.message || 'Failed to approve KYC', 'error');
+    }
+  } catch (error) {
+    toast('Failed to approve KYC', 'error');
+  }
+}
+
+async function kycReject(userId) {
+  const reason = prompt('Reason for rejection:');
+  if (!reason) return;
+  
+  try {
+    const res = await API.kyc.reject(userId, { reason });
+    if (res.success) {
+      toast('KYC rejected', 'info');
+      await loadUserData(); // Refresh admin data
+    } else {
+      toast(res.message || 'Failed to reject KYC', 'error');
+    }
+  } catch (error) {
+    toast('Failed to reject KYC', 'error');
+  }
+}
+
+function viewKYCDocuments(index, docType) {
+  // Open document viewer modal
+  openModal('kyc-documents', { index, docType });
+}
+
+function openPayoutSettings() {
+  // Open payout settings modal
+  toast('Payout settings coming soon', 'info');
+}
+
+async function handleProductSubmit(event) {
+  event.preventDefault();
+  
+  const form = document.getElementById('product-form');
+  const formData = new FormData(form);
+  const productData = {
+    name: formData.get('name'),
+    type: formData.get('type'),
+    amount: parseFloat(formData.get('amount')),
+    description: formData.get('description'),
+    visibility: formData.get('visibility'),
+    isFree: parseFloat(formData.get('amount')) === 0,
+  };
+  
+  const isEdit = !!S.modalData?._id;
+  const apiCall = isEdit ? API.products.update(S.modalData._id, productData) : API.products.create(productData);
+  
+  try {
+    const res = await apiCall;
+    if (res.success) {
+      toast(isEdit ? 'Product updated successfully! 🎉' : 'Product created successfully! 🎉', 'success');
+      closeModal();
+      await loadUserData(); // Refresh product list
+    } else {
+      toast(res.message || 'Failed to save product', 'error');
+    }
+  } catch (error) {
+    toast('Failed to save product', 'error');
+  }
+}
+
+function exportReport() {
+  // Generate CSV report of platform data
+  const csvContent = [
+    ['Metric', 'Value'],
+    ['Total Users', S.stats.totalUsers || 0],
+    ['Total Creators', S.stats.totalCreators || 0],
+    ['Total Products', S.stats.totalProducts || 0],
+    ['Total Revenue', '$' + (S.stats.totalRevenue || 0)],
+    ['Pending KYC', S.kycPending.length || 0]
+  ].map(row => row.join(',')).join('\n');
+  
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `createhub-report-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+  
+  toast('Report exported successfully', 'success');
+}
+
+async function markAllNotificationsRead() {
+  try {
+    const res = await API.notifications.markAllRead();
+    if (res.success) {
+      // Update local state
+      S.notifications.forEach(n => n.read = true);
+      render();
+      toast('All notifications marked as read', 'success');
+    }
+  } catch (error) {
+    toast('Failed to mark notifications as read', 'error');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  MODALS
+// ══════════════════════════════════════════════
+function renderModal() {
+  const m = S.modal;
+  let inner = '';
+  if (m === 'profile') inner = modalProfile();
+  else if (m === 'addProduct') inner = modalAddProduct();
+  else if (m === 'addUser') inner = modalAddUser();
+  else if (m === 'payment') inner = modalPayment();
+  return `<div class="modal-bg" id="modal-bg">${inner}</div>`;
+}
+
+function modalProfile() {
+  const u = S.user;
+  return `<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Profile</div>
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div class="avatar" style="background:${u.clr};width:64px;height:64px;font-size:22px;margin:0 auto 0.85rem">${u.name[0]}</div>
+      <div style="font-family:var(--syne);font-size:18px;font-weight:700">${u.name}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:3px">${u.email}</div>
+      <span class="badge b-purple mt-1">${u.role}</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal();setPage('settings')">Account settings</button>
+      <button class="btn btn-danger" onclick="logout()">Sign out</button>
+    </div>
+  </div>`;
+}
+
+function modalAddProduct() {
+  const product = S.modalData || {};
+  const isEdit = !!product._id;
+  
+  return `<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">${isEdit ? 'Edit Product' : 'Create New Product'}</div>
+    <form id="product-form" class="payment-form">
+      <div class="form-group"><label>Product name</label><input name="name" placeholder="e.g. UI Design Masterclass" value="${product.name || ''}" required/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Product type</label>
+          <select name="type" required>
+            <option value="course" ${product.type === 'course' ? 'selected' : ''}>Course</option>
+            <option value="template" ${product.type === 'template' ? 'selected' : ''}>Template</option>
+            <option value="ebook" ${product.type === 'ebook' ? 'selected' : ''}>eBook</option>
+            <option value="file_bundle" ${product.type === 'file_bundle' ? 'selected' : ''}>File Bundle</option>
+            <option value="presets" ${product.type === 'presets' ? 'selected' : ''}>Presets</option>
+            <option value="coaching" ${product.type === 'coaching' ? 'selected' : ''}>Coaching</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Price (USD)</label><input name="amount" type="number" placeholder="29.00" min="0" step="0.01" value="${product.pricing?.amount || ''}" required/></div>
+      </div>
+      <div class="form-group"><label>Short description</label><textarea name="description" rows="3" placeholder="Describe your product in 1–2 sentences…" required>${product.description || ''}</textarea></div>
+      <div class="form-group"><label>Visibility</label>
+        <select name="visibility">
+          <option value="public" ${product.visibility === 'public' ? 'selected' : ''}>Public</option>
+          <option value="draft" ${product.visibility === 'draft' ? 'selected' : ''}>Draft</option>
+          <option value="unlisted" ${product.visibility === 'unlisted' ? 'selected' : ''}>Unlisted</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">${isEdit ? 'Update' : 'Create'} Product</button>
+      </div>
+    </form>
+  </div>`;
+}
+
+function modalAddUser() {
+  return `<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Invite User</div>
+    <div class="form-group"><label>Email address</label><input type="email" placeholder="user@example.com"/></div>
+    <div class="form-group"><label>Role</label>
+      <select><option>Creator</option><option>Public</option><option>Admin</option></select>
+    </div>
+    <div class="form-group"><label>Personal note (optional)</label><textarea rows="2" placeholder="Add a welcome message…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal();toast('Invite sent! ✉️','success')">Send invite</button>
+    </div>
+  </div>`;
+}
+
+function modalPayment() {
+  const data = S.modalData || {};
+  return `<div class="modal payment-modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Complete Purchase</div>
+    <div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+        <span style="font-size:24px">${data.icon || '📦'}</span>
+        <div>
+          <div style="font-weight:600;color:var(--text)">${data.name || 'Product'}</div>
+          <div style="font-size:14px;color:var(--text2)">${data.price || '$0.00'}</div>
+        </div>
+      </div>
+    </div>
+    <form id="payment-form" class="payment-form">
+      <div class="form-group">
+        <label>Card Information</label>
+        <div id="card-element" class="card-element"></div>
+      </div>
+      <div id="payment-error" class="payment-error" style="display:none"></div>
+      <div id="payment-processing" class="payment-processing" style="display:none">
+        <div class="spinner"></div>
+        Processing payment...
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="submit-payment">Pay ${data.price || '$0.00'}</button>
+      </div>
+    </form>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  PAYMENT FUNCTIONS
+// ══════════════════════════════════════════════
+let stripe = null;
+let elements = null;
+let cardElement = null;
+
+function initializeStripe() {
+  // Initialize Stripe with test key (replace with actual key)
+  stripe = Stripe('pk_test_51234567890abcdef'); // Test key
+  elements = stripe.elements();
+  
+  cardElement = elements.create('card', {
+    style: {
+      base: {
+        fontSize: '14px',
+        color: '#ededf8',
+        '::placeholder': { color: '#8888aa' },
+      },
+    },
+  });
+  
+  cardElement.mount('#card-element');
+}
+
+function handlePaymentSubmit(productId) {
+  return async (event) => {
+    event.preventDefault();
+    
+    if (!stripe || !cardElement) {
+      toast('Payment system not initialized', 'error');
+      return;
+    }
+    
+    const submitBtn = document.getElementById('submit-payment');
+    const errorDiv = document.getElementById('payment-error');
+    const processingDiv = document.getElementById('payment-processing');
+    
+    submitBtn.disabled = true;
+    errorDiv.style.display = 'none';
+    processingDiv.style.display = 'flex';
+    
+    try {
+      // Create order
+      const orderRes = await API.orders.create({ productId });
+      
+      if (!orderRes.success || !orderRes.paymentIntent) {
+        throw new Error(orderRes.message || 'Failed to create order');
+      }
+      
+      // Confirm payment
+      const { error, paymentIntent } = await stripe.confirmCardPayment(
+        orderRes.paymentIntent.client_secret,
+        {
+          payment_method: {
+            card: cardElement,
+          },
+        }
+      );
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (paymentIntent.status === 'succeeded') {
+        toast('Payment successful! 🎉', 'success');
+        closeModal();
+        // Redirect to purchases or dashboard
+        setTimeout(() => setPage('products'), 1500);
+      }
+      
+    } catch (err) {
+      console.error('Payment error:', err);
+      errorDiv.textContent = err.message;
+      errorDiv.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      processingDiv.style.display = 'none';
+    }
+  };
+}
+
+function initiatePayment(product) {
+  openModal('payment', product);
+  setTimeout(() => {
+    if (!stripe) initializeStripe();
+    
+    const form = document.getElementById('payment-form');
+    if (form) {
+      form.removeEventListener('submit', handlePaymentSubmit);
+      form.addEventListener('submit', handlePaymentSubmit(product._id));
+    }
+  }, 100);
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function sc(label, val, change, dir) {
+  const cls = dir==='up'?'up':dir==='dn'?'dn':'neu';
+  const arrow = dir==='up'?'↑':dir==='dn'?'↓':'';
+  return `<div class="stat-card">
+    <div class="stat-label">${label}</div>
+    <div class="stat-val">${val}</div>
+    <div class="stat-change ${cls}">${arrow} ${change}</div>
+  </div>`;
+}
+
+function stBadge(s) {
+  if (s==='active')    return `<span class="badge b-green">Active</span>`;
+  if (s==='suspended') return `<span class="badge b-red">Suspended</span>`;
+  if (s==='draft')     return `<span class="badge b-gray">Draft</span>`;
+  return `<span class="badge b-gray">${s}</span>`;
+}
+
+function kycBadge(k) {
+  if (k==='verified') return `<span class="badge b-green">Verified</span>`;
+  if (k==='pending')  return `<span class="badge b-amber">Pending</span>`;
+  return `<span class="badge b-gray">None</span>`;
+}
+
+// ══════════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════════
+function go(route) {
+  S.route = route;
+  S.modal = null;
+  if (route === 'landing') S.page = 'overview';
+  render();
+  window.scrollTo(0,0);
+}
+
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior:'smooth'});
+}
+
+function setPage(p) {
+  S.page = p;
+  S.modal = null;
+  render();
+  document.querySelector('.main')?.scrollTo(0,0);
+}
+
+function setAuthTab(t) { S.authTab = t; render(); }
+function setRole(r) { S.authRole = r; render(); }
+
+function doAuth(role) {
+  const profiles = {
+    creator: { name:'Amara Osei',   email:'amara@createhub.io', clr:'#7c6ff7' },
+    admin:   { name:'Admin User',   email:'admin@createhub.io', clr:'#f04444' },
+    public:  { name:'Daniel Park',  email:'daniel@createhub.io', clr:'#f5a623' },
+  };
+  const p = profiles[role] || profiles.creator;
+  S.user = { ...p, role: role==='admin'?'admin':'creator' };
+  S.route = 'dashboard';
+  S.page = 'overview';
+  S.modal = null;
+  render();
+  setTimeout(() => toast(`Welcome back, ${S.user.name.split(' ')[0]}! 👋`, 'success'), 80);
+}
+
+function logout() {
+  S.user = null;
+  S.route = 'landing';
+  S.modal = null;
+  render();
+  setTimeout(() => toast('Signed out successfully', 'info'), 80);
+}
+
+function openModal(id, data) {
+  S.modal = id;
+  S.modalData = data;
+  render();
+}
+
+function closeModal() {
+  S.modal = null;
+  render();
+}
+
+function markAllRead() {
+  S.notifs.forEach(n => n.read = true);
+  render();
+  toast('All notifications marked as read', 'success');
+}
+
+function kycApprove(i) {
+  const name = S.kycPending[i].name;
+  S.kycPending.splice(i, 1);
+  render();
+  toast(`KYC approved for ${name} ✓`, 'success');
+}
+
+function togglePref(i) {
+  S.toggles['t'+i] = !S.toggles['t'+i];
+  const el = document.querySelectorAll('.toggle')[i];
+  if (!el) return;
+  el.classList.toggle('on', S.toggles['t'+i]);
+  el.classList.toggle('off', !S.toggles['t'+i]);
+  toast('Preference saved', 'success');
+}
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+function toast(msg, type='info') {
+  const area = document.getElementById('toast-area');
+  if (!area) return;
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  const colors = { success:'var(--green)', error:'var(--red)', info:'var(--accent3)' };
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span style="color:${colors[type]||colors.info};font-weight:700;font-size:13px">${icons[type]||'•'}</span><span>${msg}</span>`;
+  area.appendChild(t);
+  setTimeout(() => { t.style.animation = 'toastOut 0.2s ease forwards'; setTimeout(()=>t.remove(), 200); }, 3000);
+}
+
+// ══════════════════════════════════════════════
+//  BIND EVENTS
+// ══════════════════════════════════════════════
+function bindAll() {
+  // Close modal on backdrop click
+  const bg = document.getElementById('modal-bg');
+  if (bg) bg.addEventListener('click', (e) => { if (e.target === bg) closeModal(); });
+  
+  // Handle product form submission
+  const productForm = document.getElementById('product-form');
+  if (productForm) {
+    productForm.addEventListener('submit', handleProductSubmit);
+  }
+  
+  // Handle payment form submission
+  const paymentForm = document.getElementById('payment-form');
+  if (paymentForm) {
+    paymentForm.addEventListener('submit', handlePaymentSubmit);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "createhub",
+  "version": "1.0.0",
+  "description": "CreateHub — Creator Economy SaaS Platform",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install",
+    "dev": "cd backend && npm run dev",
+    "start": "cd backend && npm start",
+    "build": "echo 'SPA ready for deployment'",
+    "vercel-build": "echo 'Ready for deployment'"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "workspaces": ["backend"]
+}

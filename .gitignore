@@ -1,0 +1,28 @@
+node_modules/
+.env
+uploads/
+*.log
+.DS_Store
+dist/
+.nyc_output/
+coverage/
+
+# Admin credentials (remove before production deployment)
+admin-credentials.json
+security-summary.json
+create-admin.js
+test-admin.js
+server-demo.js
+setup-admin.js
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE files
+.vscode/
+.idea/
+
+# Package manager files
+package-lock.json
+yarn.lock
