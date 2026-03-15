@@ -26,3 +26,6 @@ setup-admin.js
 # Package manager files
 package-lock.json
 yarn.lock
+
+.vercel
+.env*.local
