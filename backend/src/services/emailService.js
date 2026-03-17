@@ -1,7 +1,13 @@
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend;
 
+const getResend = () => {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+};
 // Email templates
 const emailTemplates = {
   welcome: (firstName, lastName) => ({
@@ -149,7 +155,7 @@ const sendEmail = async (to, template, data) => {
   try {
     const emailContent = emailTemplates[template](data);
     
-    const { data: emailData, error } = await resend.emails.send({
+    const { data: emailData, error } = await getResend().emails.send({
       from: 'onboarding@resend.dev',
       to: [to],
       ...emailContent
