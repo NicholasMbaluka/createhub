@@ -1,0 +1,32 @@
+// Test Resend API with your key
+require('dotenv').config({ path: '.env.development' });
+const { sendEmail } = require('./src/services/emailService');
+
+async function testResendAPI() {
+  console.log('🧪 Testing Resend API with your key...');
+  console.log('📧 Sending test email to: nicholasmbaluka05@gmail.com');
+  
+  try {
+    const result = await sendEmail(
+      'nicholasmbaluka05@gmail.com',
+      'welcome',
+      { 
+        firstName: 'Nicholas', 
+        lastName: 'Baluka' 
+      }
+    );
+    
+    if (result.success) {
+      console.log('✅ SUCCESS! Email sent to Resend API');
+      console.log('📬 Check your inbox for the welcome email');
+      console.log('🔑 Your API key is working correctly!');
+    } else {
+      console.log('❌ FAILED: Email not sent');
+      console.log('🚨 Error:', result.error);
+    }
+  } catch (error) {
+    console.error('❌ API Error:', error.message);
+  }
+}
+
+testResendAPI();

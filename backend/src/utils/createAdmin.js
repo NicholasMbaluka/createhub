@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const User = require('../src/models/User');
+const User = require('../models/User');
 
 // Create admin user directly using the existing connection
 async function createAdmin() {

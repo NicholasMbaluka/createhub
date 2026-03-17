@@ -8,8 +8,7 @@ const SUBSCRIPTION_PLANS = {
       'Up to 5 products or links',
       'Basic analytics',
       'CreateHub branding displayed',
-      'Creator storefront',
-      '15% platform commission on each sale'
+      'Creator storefront'
     ],
     limits: {
       products: 5,
@@ -22,7 +21,7 @@ const SUBSCRIPTION_PLANS = {
       marketingIntegrations: false,
       prioritySupport: false
     },
-    commission: 0.15 // 15%
+    commission: 0 // No commission for now
   },
   pro: {
     name: 'CreateHub Pro',
@@ -33,8 +32,7 @@ const SUBSCRIPTION_PLANS = {
       'Remove CreateHub branding',
       'Custom page themes',
       'Sales analytics',
-      'Creator store page',
-      '0% commission on sales'
+      'Creator store page'
     ],
     limits: {
       products: -1, // Unlimited
@@ -58,9 +56,7 @@ const SUBSCRIPTION_PLANS = {
       'Advanced analytics dashboard',
       'Email capture tools',
       'Custom domain support',
-      'Marketing integrations',
-      'Creator storefront tools',
-      '0% commission'
+      'Creator storefront tools'
     ],
     limits: {
       products: -1,
@@ -85,8 +81,7 @@ const SUBSCRIPTION_PLANS = {
       'Advanced customization',
       'Premium themes',
       'Automation tools',
-      'Priority support',
-      '0% commission'
+      'Priority support'
     ],
     limits: {
       products: -1,
@@ -108,12 +103,6 @@ const getPlanDetails = (planName) => {
   return SUBSCRIPTION_PLANS[planName] || SUBSCRIPTION_PLANS.starter;
 };
 
-// Helper function to calculate commission
-const calculateCommission = (planName, saleAmount) => {
-  const plan = getPlanDetails(planName);
-  return saleAmount * plan.commission;
-};
-
 // Helper function to check if user can perform action based on plan limits
 const canPerformAction = (user, action, currentCount = 0) => {
   const plan = getPlanDetails(user.subscription?.plan || 'starter');
@@ -131,15 +120,13 @@ const getPlanFeatures = (planName) => {
     name: plan.name,
     price: plan.price,
     features: plan.features,
-    limits: plan.limits,
-    commission: plan.commission
+    limits: plan.limits
   };
 };
 
 module.exports = {
   SUBSCRIPTION_PLANS,
   getPlanDetails,
-  calculateCommission,
   canPerformAction,
   getPlanFeatures
 };

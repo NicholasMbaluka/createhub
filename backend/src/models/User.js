@@ -14,6 +14,24 @@ const userSchema = new mongoose.Schema({
   bio:          { type: String, default: '', maxlength: 300 },
   slug:         { type: String, unique: true, sparse: true, lowercase: true },
   socialLinks:  { twitter: String, instagram: String, youtube: String, website: String },
+  
+  // Storefront customization
+  storefrontCustomization: {
+    theme: { type: String, enum: ['default', 'minimal', 'bold', 'playful'], default: 'default' },
+    colors: {
+      primary: { type: String, default: '#7c6ff7' },
+      secondary: { type: String, default: '#5b4fe0' },
+      accent: { type: String, default: '#a89dff' },
+      background: { type: String, default: '#08080e' },
+      text: { type: String, default: '#ededf8' }
+    },
+    layout: { type: String, enum: ['grid', 'list', 'masonry'], default: 'grid' },
+    showSocialLinks: { type: Boolean, default: true },
+    showStats: { type: Boolean, default: true },
+    customCSS: { type: String, default: '' },
+    bannerImage: String,
+    logo: String
+  },
 
   // KYC
   kyc: {
@@ -29,11 +47,21 @@ const userSchema = new mongoose.Schema({
 
   // Payment
   stripeAccountId: { type: String, default: null },
-  payoutMethod: {
-    type:       { type: String, enum: ['bank', 'paypal', null], default: null },
-    lastFour:   String,
-    verified:   { type: Boolean, default: false },
-  },
+  payoutMethods: [{
+    id: { type: String, required: true },
+    type: { type: String, enum: ['bank', 'paypal'], required: true },
+    details: {
+      // Bank account details
+      accountNumber: String,
+      routingNumber: String,
+      accountHolderName: String,
+      bankName: String,
+      // PayPal details
+      email: String
+    },
+    isDefault: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+  }],
 
   // CreateHub Subscription Plan
   subscription: {

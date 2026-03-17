@@ -50,17 +50,6 @@ const createProduct = async (req, res) => {
   if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
 
   try {
-    // Check subscription plan limits
-    const currentProductCount = await Product.countDocuments({ creator: req.user._id });
-    if (!canPerformAction(req.user, 'products', currentProductCount)) {
-      const plan = req.user.subscription?.plan || 'starter';
-      const limit = plan === 'starter' ? 5 : 'unlimited';
-      return res.status(403).json({ 
-        success: false, 
-        message: `Product limit reached. Your plan allows ${limit} products. Upgrade to create more.` 
-      });
-    }
-
     const { name, description, type, amount, isFree, tags, category } = req.body;
     const product = await Product.create({
       creator: req.user._id,

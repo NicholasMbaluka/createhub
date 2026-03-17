@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet"/>
     <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.lemonsqueezy.com/lemon.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -380,6 +381,7 @@
   }
   .plan-card:hover { border-color: var(--border2); }
   .plan-card.featured { border-color: var(--accent); background: #0c0a1e; }
+  .plan-card.current { border-color: var(--green); background: var(--greenbg); }
   .plan-pop {
     position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
     background: var(--accent); color: #fff; font-size: 10px; font-weight: 800;
@@ -407,6 +409,43 @@
   .plan-cta.main:hover { background: var(--accent2); }
   .plan-cta.out { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
   .plan-cta.out:hover { background: var(--bg4); color: var(--text); }
+  .plan-cta.current-plan-btn { background: var(--green); color: #fff; cursor: default; }
+  .plan-card.current { border-color: var(--green); background: var(--greenbg); }
+
+  /* Subscription Styles */
+  .subscription-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem; border-bottom: 1px solid var(--border);
+  }
+  .subscription-item:last-child { border-bottom: none; }
+  .subscription-name { font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+  .subscription-price { font-size: 14px; color: var(--text2); margin-bottom: 0.25rem; }
+  .subscription-status {
+    display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px;
+    font-weight: 600; text-transform: uppercase;
+  }
+  .subscription-status.active { background: var(--greenbg); color: var(--green); }
+  .subscription-status.cancelled { background: var(--redbg); color: var(--red); }
+
+  /* Loading Styles */
+  .loading-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(8, 8, 14, 0.9); display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+  }
+  .loading-content {
+    text-align: center;
+  }
+  .loading-spinner {
+    width: 40px; height: 40px; border: 3px solid var(--border2);
+    border-top: 3px solid var(--accent); border-radius: 50%;
+    animation: spin 1s linear infinite; margin: 0 auto 1rem;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .loading-text { color: var(--text2); font-size: 14px; }
 
   /* Footer */
   .landing-footer {
@@ -1091,20 +1130,22 @@ function renderLanding() {
           name:'CreateHub Starter', 
           price:'$0', 
           per:'/month', 
-          feats:['Basic link-in-bio page','Up to 5 products','Basic analytics','CreateHub branding','15% platform commission'], 
+          feats:['Basic link-in-bio page','Up to 5 products','Basic analytics','CreateHub branding'], 
           cta:'Start free', 
           style:'out', 
-          feat:false 
+          feat:false,
+          key:'starter'
         },
         { 
           name:'CreateHub Pro', 
           price:'$9', 
           per:'/month', 
-          feats:['Unlimited products','Remove CreateHub branding','Custom page themes','Sales analytics','0% commission'], 
+          feats:['Unlimited products','Remove CreateHub branding','Custom page themes','Sales analytics'], 
           cta:'Get Pro', 
           style:'main', 
           feat:true, 
-          badge:'MOST POPULAR' 
+          badge:'MOST POPULAR',
+          key:'pro'
         },
         { 
           name:'CreateHub Business', 
@@ -1113,7 +1154,8 @@ function renderLanding() {
           feats:['Everything in Pro','Advanced analytics','Email capture tools','Custom domain support','Marketing integrations'], 
           cta:'Get Business', 
           style:'out', 
-          feat:false 
+          feat:false,
+          key:'business'
         },
         { 
           name:'CreateHub Premium', 
@@ -1122,15 +1164,17 @@ function renderLanding() {
           feats:['Everything in Business','API access','Advanced customization','Premium themes','Priority support'], 
           cta:'Get Premium', 
           style:'out', 
-          feat:false 
+          feat:false,
+          key:'premium'
         },
       ].map(p=>`
-        <div class="plan-card ${p.feat?'featured':''}">
+        <div class="plan-card ${p.feat?'featured':''} ${S.user && S.user.subscription?.plan === p.key ? 'current' : ''}">
           ${p.badge?`<div class="plan-pop">${p.badge}</div>`:''}
+          ${S.user && S.user.subscription?.plan === p.key ? `<div class="plan-pop" style="background:var(--green);top:-10px;">CURRENT PLAN</div>` : ''}
           <div class="plan-name">${p.name}</div>
           <div class="plan-price">${p.price}<span class="per">${p.per}</span></div>
           ${p.feats.map(f=>`<div class="plan-feat"><span class="ck">✓</span>${f}</div>`).join('')}
-          <button class="plan-cta ${p.style}" onclick="go('auth')">${p.cta}</button>
+          <button class="plan-cta ${S.user && S.user.subscription?.plan === p.key ? 'current-plan-btn' : p.style}" onclick="${S.user && S.user.subscription?.plan === p.key ? 'toast(\"You are already on this plan!\",\"info\")' : 'go(\'auth\')'}">${S.user && S.user.subscription?.plan === p.key ? 'Current Plan' : p.cta}</button>
         </div>
       `).join('')}
     </div>
@@ -1584,8 +1628,7 @@ function pagePlans() {
         'Up to 5 products or links',
         'Basic analytics',
         'CreateHub branding displayed',
-        'Creator storefront',
-        '15% platform commission on each sale'
+        'Creator storefront'
       ]
     },
     pro: {
@@ -1596,8 +1639,7 @@ function pagePlans() {
         'Remove CreateHub branding',
         'Custom page themes',
         'Sales analytics',
-        'Creator store page',
-        '0% commission on sales'
+        'Creator store page'
       ]
     },
     business: {
@@ -1609,8 +1651,7 @@ function pagePlans() {
         'Email capture tools',
         'Custom domain support',
         'Marketing integrations',
-        'Creator storefront tools',
-        '0% commission'
+        'Creator storefront tools'
       ]
     },
     premium: {
@@ -1622,8 +1663,7 @@ function pagePlans() {
         'Advanced customization',
         'Premium themes',
         'Automation tools',
-        'Priority support',
-        '0% commission'
+        'Priority support'
       ]
     }
   };
@@ -1982,7 +2022,6 @@ function pageSettings() {
   const u = S.user;
   const isAdmin = u.role === 'admin';
   const currentPlan = u.subscription?.plan || 'starter';
-  const commissionRate = currentPlan === 'starter' ? 15 : 0;
   
   return `
   <div class="ph"><div class="ph-left"><div class="ph-title">Settings</div><div class="ph-sub">Manage your account preferences.</div></div></div>
@@ -2013,12 +2052,9 @@ function pageSettings() {
         <span style="font-size:20px">⭐</span>
         <div style="flex:1">
           <div style="font-size:13.5px;color:var(--text);font-weight:500">CreateHub ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}</div>
-          <div style="font-size:12px;color:var(--text3)">${currentPlan === 'starter' ? 'Free plan · 15% commission · 5 products limit' : 'Paid plan · 0% commission · Unlimited products'}</div>
+          <div style="font-size:12px;color:var(--text3)">${currentPlan === 'starter' ? 'Free plan · 5 products limit' : 'Paid plan · Unlimited products'}</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="setPage('plans')">Upgrade Plan</button>
-      </div>
-      <div style="font-size:12px;color:var(--text2);margin-top:0.5rem">
-        Current commission rate: <strong style="color:${commissionRate > 0 ? 'var(--red)' : 'var(--green)'}">${commissionRate}%</strong> on each sale
       </div>
     </div>
     <div class="card mb-2">
@@ -2480,6 +2516,326 @@ function togglePref(i) {
 }
 
 // ══════════════════════════════════════════════
+//  LEMON SQUEEZY INTEGRATION
+// ══════════════════════════════════════════════
+async function createLemonCheckout(type, data) {
+  try {
+    showLoading('Creating checkout...');
+    
+    let endpoint;
+    switch(type) {
+      case 'platform':
+        endpoint = '/api/lemon-squeezy/platform/checkout';
+        break;
+      case 'creator':
+        endpoint = `/api/lemon-squeezy/creator/${data.creatorId}/checkout`;
+        break;
+      default:
+        throw new Error('Invalid checkout type');
+    }
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${S.token}`
+      },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      hideLoading();
+      // Redirect to Lemon Squeezy checkout
+      window.location.href = result.checkoutUrl;
+    } else {
+      hideLoading();
+      toast(result.message || 'Failed to create checkout', 'error');
+    }
+    
+  } catch (error) {
+    hideLoading();
+    toast('Checkout creation failed', 'error');
+    console.error('Lemon Squeezy checkout error:', error);
+  }
+}
+
+async function subscribeToPlan(planId) {
+  await createLemonCheckout('platform', { planId });
+}
+
+async function subscribeToCreator(creatorId, offerId) {
+  await createLemonCheckout('creator', { creatorId, offerId });
+}
+
+async function loadUserSubscriptions() {
+  try {
+    const response = await fetch('/api/lemon-squeezy/user/subscriptions', {
+      headers: {
+        'Authorization': `Bearer ${S.token}`
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      S.userSubscriptions = result;
+      return result;
+    } else {
+      toast('Failed to load subscriptions', 'error');
+      return null;
+    }
+    
+  } catch (error) {
+    toast('Failed to load subscriptions', 'error');
+    console.error('Load subscriptions error:', error);
+    return null;
+  }
+}
+
+async function cancelSubscription(subscriptionId) {
+  if (!confirm('Are you sure you want to cancel this subscription?')) return;
+  
+  try {
+    showLoading('Cancelling subscription...');
+    
+    const response = await fetch(`/api/lemon-squeezy/subscription/${subscriptionId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${S.token}`
+      }
+    });
+    
+    const result = await response.json();
+    
+    hideLoading();
+    
+    if (result.success) {
+      toast('Subscription cancelled successfully', 'success');
+      await loadUserSubscriptions();
+      render();
+    } else {
+      toast(result.message || 'Failed to cancel subscription', 'error');
+    }
+    
+  } catch (error) {
+    hideLoading();
+    toast('Failed to cancel subscription', 'error');
+    console.error('Cancel subscription error:', error);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  LOADING STATES
+// ══════════════════════════════════════════════
+function showLoading(message = 'Loading...') {
+  S.loading = true;
+  S.loadingMessage = message;
+  render();
+}
+
+function hideLoading() {
+  S.loading = false;
+  S.loadingMessage = '';
+  render();
+}
+
+// ══════════════════════════════════════════════
+//  PLATFORM SUBSCRIPTION PAGE
+// ════════════════════════════════════════════
+function pagePlatformPlans() {
+  const currentPlan = S.user?.subscription?.plan || 'starter';
+  
+  return `
+    <div class="page">
+      <div class="page-header">
+        <h1 class="page-title">Choose Your Plan</h1>
+        <p class="page-subtitle">Unlock powerful features to grow your creator business</p>
+      </div>
+      
+      <div class="pricing-grid">
+        ${[
+          { 
+            id: 'starter',
+            name:'CreateHub Starter', 
+            price:'$0', 
+            per:'/month', 
+            feats:['Basic creator page','Up to 5 products','Basic analytics','CreateHub branding'], 
+            cta:'Start free', 
+            style:'out',
+            current: currentPlan === 'starter'
+          },
+          { 
+            id: 'pro',
+            name:'CreateHub Pro', 
+            price:'$9', 
+            per:'/month', 
+            feats:['Unlimited products','Remove CreateHub branding','Custom themes','Advanced analytics','Priority support'], 
+            cta:'Get Pro', 
+            style:'main',
+            current: currentPlan === 'pro',
+            badge:'MOST POPULAR'
+          },
+          { 
+            id: 'business',
+            name:'CreateHub Business', 
+            price:'$19', 
+            per:'/month', 
+            feats:['Everything in Pro','Advanced analytics','Email capture tools','Custom domain support','Marketing integrations'], 
+            cta:'Get Business', 
+            style:'out',
+            current: currentPlan === 'business'
+          },
+          { 
+            id: 'premium',
+            name:'CreateHub Premium', 
+            price:'$39', 
+            per:'/month', 
+            feats:['Everything in Business','API access','Premium themes','Automation tools','White-label options'], 
+            cta:'Get Premium', 
+            style:'out',
+            current: currentPlan === 'premium'
+          }
+        ].map(p=>`
+          <div class="plan-card ${p.feat?'featured':''} ${p.current ? 'current' : ''}">
+            ${p.badge?`<div class="plan-pop">${p.badge}</div>`:''}
+            ${p.current ? `<div class="plan-pop" style="background:var(--green);top:-10px;">CURRENT PLAN</div>` : ''}
+            <div class="plan-name">${p.name}</div>
+            <div class="plan-price">${p.price}<span class="per">${p.per}</span></div>
+            ${p.feats.map(f=>`<div class="plan-feat"><span class="ck">✓</span>${f}</div>`).join('')}
+            <button class="plan-cta ${p.current ? 'current-plan-btn' : p.style}" 
+                    onclick="${p.current ? 'toast(\"You are already on this plan!\",\"info\")' : 'subscribeToPlan(\'' + p.id + '\')'}">
+              ${p.current ? 'Current Plan' : p.cta}
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════
+//  CREATOR SUBSCRIPTION PAGE
+// ══════════════════════════════════════════════
+function pageCreatorSubscriptions(creatorId) {
+  // This would load creator's subscription offers
+  const offers = [
+    {
+      id: 'basic',
+      name: 'Basic Support',
+      price: '$5',
+      per: '/month',
+      feats: ['Access to exclusive content', 'Monthly Q&A sessions', 'Community Discord access'],
+      popular: false
+    },
+    {
+      id: 'premium',
+      name: 'Premium Support',
+      price: '$20',
+      per: '/month',
+      feats: ['Everything in Basic', '1-on-1 monthly calls', 'Early access to content', 'Exclusive tutorials'],
+      popular: true
+    }
+  ];
+  
+  return `
+    <div class="page">
+      <div class="page-header">
+        <h1 class="page-title">Support This Creator</h1>
+        <p class="page-subtitle">Choose a subscription tier to get exclusive content and support</p>
+      </div>
+      
+      <div class="pricing-grid">
+        ${offers.map(offer => `
+          <div class="plan-card ${offer.popular ? 'featured' : ''}">
+            ${offer.popular ? `<div class="plan-pop">MOST POPULAR</div>` : ''}
+            <div class="plan-name">${offer.name}</div>
+            <div class="plan-price">${offer.price}<span class="per">${offer.per}</span></div>
+            ${offer.feats.map(f => `<div class="plan-feat"><span class="ck">✓</span>${f}</div>`).join('')}
+            <button class="plan-cta ${offer.popular ? 'main' : 'out'}" 
+                    onclick="subscribeToCreator('${creatorId}', '${offer.id}')">
+              Subscribe ${offer.price}
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════
+//  USER SUBSCRIPTIONS PAGE
+// ══════════════════════════════════════════════
+function pageMySubscriptions() {
+  const subscriptions = S.userSubscriptions;
+  
+  if (!subscriptions) {
+    return `
+      <div class="page">
+        <div class="page-header">
+          <h1 class="page-title">My Subscriptions</h1>
+          <p class="page-subtitle">Manage your active subscriptions</p>
+        </div>
+        <div class="loading">Loading subscriptions...</div>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="page">
+      <div class="page-header">
+        <h1 class="page-title">My Subscriptions</h1>
+        <p class="page-subtitle">Manage your active subscriptions</p>
+      </div>
+      
+      ${subscriptions.platformSubscription ? `
+        <div class="card mb-2">
+          <div class="card-title">Platform Subscription</div>
+          <div class="subscription-item">
+            <div>
+              <div class="subscription-name">${subscriptions.platformSubscription.plan}</div>
+              <div class="subscription-price">$${subscriptions.platformSubscription.amount}/${subscriptions.platformSubscription.interval}</div>
+              <div class="subscription-status active">Active</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="cancelSubscription('${subscriptions.platformSubscription.id}')">
+              Cancel
+            </button>
+          </div>
+        </div>
+      ` : ''}
+      
+      ${subscriptions.customerSubscriptions && subscriptions.customerSubscriptions.length > 0 ? `
+        <div class="card">
+          <div class="card-title">Creator Subscriptions</div>
+          ${subscriptions.customerSubscriptions.map(sub => `
+            <div class="subscription-item">
+              <div>
+                <div class="subscription-name">${sub.creator.firstName} ${sub.creator.lastName}</div>
+                <div class="subscription-price">$${sub.amount}/${sub.interval}</div>
+                <div class="subscription-status active">Active</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="cancelSubscription('${sub.id}')">
+                Cancel
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      
+      ${(!subscriptions.platformSubscription && (!subscriptions.customerSubscriptions || subscriptions.customerSubscriptions.length === 0)) ? `
+        <div class="empty-state">
+          <div class="empty-icon">📦</div>
+          <div class="empty-title">No active subscriptions</div>
+          <div class="empty-desc">Subscribe to creators or upgrade your plan to get started</div>
+          <button class="btn btn-primary" onclick="setPage('plans')">Browse Plans</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════
 //  TOAST
 // ══════════════════════════════════════════════
 function toast(msg, type='info') {
@@ -2513,6 +2869,49 @@ function bindAll() {
   if (paymentForm) {
     paymentForm.addEventListener('submit', handlePaymentSubmit);
   }
+}
+
+// ══════════════════════════════════════════════
+//  RENDER FUNCTION
+// ══════════════════════════════════════════════
+function render() {
+  const root = document.getElementById('root');
+  if (!root) return;
+  
+  // Add loading overlay if needed
+  const loadingOverlay = S.loading ? `
+    <div class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">${S.loadingMessage}</div>
+      </div>
+    </div>
+  ` : '';
+  
+  // Get current page content
+  let content = '';
+  switch(S.page) {
+    case 'landing': content = pageLanding(); break;
+    case 'auth': content = pageAuth(); break;
+    case 'dashboard': content = pageDashboard(); break;
+    case 'products': content = pageProducts(); break;
+    case 'customers': content = pageCustomers(); break;
+    case 'analytics': content = pageAnalytics(); break;
+    case 'settings': content = pageSettings(); break;
+    case 'plans': content = pagePlatformPlans(); break;
+    case 'subscriptions': content = pageMySubscriptions(); break;
+    case 'creator-subs': content = pageCreatorSubscriptions(S.creatorId); break;
+    default: content = pageLanding();
+  }
+  
+  root.innerHTML = content + loadingOverlay;
+  
+  // Initialize page-specific functionality
+  if (S.page === 'auth') initializeStripe();
+  if (S.page === 'dashboard' && S.user) loadUserSubscriptions();
+  
+  // Re-bind events
+  bindAll();
 }
 
 // ══════════════════════════════════════════════

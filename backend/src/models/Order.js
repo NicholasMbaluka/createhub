@@ -9,8 +9,6 @@ const orderSchema = new mongoose.Schema({
 
   pricing: {
     subtotal:   { type: Number, required: true },
-    platformFee:{ type: Number, required: true },
-    creatorNet: { type: Number, required: true },
     currency:   { type: String, default: 'USD' },
   },
 
@@ -28,8 +26,15 @@ const orderSchema = new mongoose.Schema({
     refundId:   String,
   },
 
-  accessToken:  { type: String, unique: true, sparse: true },
-  accessExpires:Date,
+  // Product delivery features
+  accessToken: { type: String, unique: true, sparse: true },
+  accessExpires: Date,
+  downloadCount: { type: Number, default: 0 },
+  lastDownloadAt: Date,
+  progress: { type: Map, of: Boolean }, // For course progress
+  serviceStatus: { type: String, enum: ['pending', 'in_progress', 'completed'], default: 'pending' },
+
+  completedAt: Date,
 }, {
   timestamps: true,
 });

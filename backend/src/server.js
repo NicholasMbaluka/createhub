@@ -54,7 +54,12 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/kyc', require('./routes/kyc'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/email', require('./routes/email'));
 app.use('/api/webhooks', require('./routes/webhooks'));
+app.use('/api/revenue', require('./routes/revenue'));
+app.use('/api/delivery', require('./routes/delivery'));
+app.use('/api/storefront', require('./routes/storefront'));
+app.use('/api/lemon-squeezy', require('./routes/lemonSqueezy'));
 
 // ── Health Check ──────────────────────────────
 app.get('/api/health', (req, res) => {

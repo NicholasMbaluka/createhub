@@ -2,6 +2,7 @@ const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const { generateToken } = require('../middleware/auth');
 const { createNotification } = require('../utils/notifications');
+const { sendEmail } = require('../services/emailService');
 
 // @desc  Register new user
 // @route POST /api/auth/register
@@ -31,6 +32,16 @@ const register = async (req, res) => {
       title: `Welcome to CreateHub, ${firstName}!`,
       body: 'Your account is ready. Complete your profile to get started.',
     });
+
+    // Send welcome email
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await sendEmail(email, 'welcome', { firstName, lastName });
+      } catch (emailError) {
+        console.error('Welcome email failed:', emailError);
+        // Don't fail registration if email fails
+      }
+    }
 
     const token = generateToken(user._id);
 

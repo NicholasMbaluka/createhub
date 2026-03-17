@@ -3,8 +3,6 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const { createNotification } = require('../utils/notifications');
 const { v4: uuidv4 } = require('uuid');
-const { calculateCommission } = require('../config/subscriptionPlans');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // @desc  Create order (initiate purchase)
 // @route POST /api/orders
@@ -23,17 +21,13 @@ const createOrder = async (req, res) => {
       return res.status(409).json({ success: false, message: 'You already own this product' });
     }
 
-    const subtotal    = product.pricing.amount;
-    const creatorPlan = product.creator.subscription?.plan || 'starter';
-    const platformFee = calculateCommission(creatorPlan, subtotal);
-    const creatorNet  = parseFloat((subtotal - platformFee).toFixed(2));
-
+    const subtotal = product.pricing.amount;
     const order = await Order.create({
       buyer:   req.user._id,
       creator: product.creator._id,
       product: productId,
-      status:  product.pricing.isFree ? 'completed' : 'pending',
-      pricing: { subtotal, platformFee, creatorNet },
+      status: product.pricing.isFree ? 'completed' : 'pending',
+      pricing: { subtotal },
       accessToken: uuidv4(),
       accessExpires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     });

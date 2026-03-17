@@ -24,6 +24,8 @@
     "MONGODB_URI": "@mongodb_uri",
     "JWT_SECRET": "@jwt_secret",
     "NODE_ENV": "production",
-    "FRONTEND_URL": "@frontend_url"
+    "FRONTEND_URL": "@frontend_url",
+    "RESEND_API_KEY": "@resend_api_key",
+    "RESEND_FROM_EMAIL": "@resend_from_email"
   }
 }
