@@ -2875,7 +2875,7 @@ function bindAll() {
 //  RENDER FUNCTION
 // ══════════════════════════════════════════════
 function render() {
-  const root = document.getElementById('root');
+  const root = document.getElementById('app');
   if (!root) return;
   
   // Add loading overlay if needed
@@ -2913,6 +2913,81 @@ function render() {
   // Re-bind events
   bindAll();
 }
+
+// ══════════════════════════════════════════════
+//  API OBJECT
+// ══════════════════════════════════════════════
+const API = {
+  auth: {
+    login: async (data) => {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    },
+    register: async (data) => {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    }
+  },
+  products: {
+    getMine: async () => {
+      const res = await fetch('/api/products/mine', {
+        headers: S.token ? { 'Authorization': `Bearer ${S.token}` } : {}
+      });
+      return await res.json();
+    },
+    getPublic: async (filters = {}) => {
+      const query = new URLSearchParams(filters).toString();
+      const res = await fetch(`/api/products/public?${query}`);
+      return await res.json();
+    },
+    create: async (data) => {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${S.token}`
+        },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    },
+    update: async (id, data) => {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${S.token}`
+        },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    }
+  },
+  orders: {
+    getMine: async () => {
+      const res = await fetch('/api/orders/mine', {
+        headers: S.token ? { 'Authorization': `Bearer ${S.token}` } : {}
+      });
+      return await res.json();
+    }
+  },
+  notifications: {
+    getMine: async () => {
+      const res = await fetch('/api/notifications/mine', {
+        headers: S.token ? { 'Authorization': `Bearer ${S.token}` } : {}
+      });
+      return await res.json();
+    }
+  }
+};
 
 // ══════════════════════════════════════════════
 //  INIT
