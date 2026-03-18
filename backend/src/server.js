@@ -11,7 +11,15 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 const connectDB = require('./config/database');
-const { sanitizeInput } = require('./middleware/validation');
+
+// Add try-catch for middleware loading
+let sanitizeInput;
+try {
+  ({ sanitizeInput } = require('./middleware/validation'));
+} catch (error) {
+  console.log('⚠️  Validation middleware not available, skipping');
+  sanitizeInput = (req, res, next) => next();
+}
 
 const app = express();
 

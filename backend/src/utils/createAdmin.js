@@ -4,6 +4,12 @@ const User = require('../models/User');
 // Create admin user directly using the existing connection
 async function createAdmin() {
   try {
+    // Check if User model is available
+    if (!User) {
+      console.log('⚠️  User model not available, skipping admin creation');
+      return;
+    }
+
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: 'nicholasmbaluka05@gmail.com' });
     if (existingAdmin) {
@@ -38,6 +44,8 @@ async function createAdmin() {
     
   } catch (error) {
     console.error('❌ Error creating admin:', error.message);
+    // Don't crash the app if admin creation fails
+    console.log('⚠️  Admin creation failed, but app will continue running');
   }
 }
 
