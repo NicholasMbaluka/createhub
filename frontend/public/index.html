@@ -2934,6 +2934,12 @@ const API = {
         body: JSON.stringify(data)
       });
       return await res.json();
+    },
+    me: async () => {
+      const res = await fetch('/api/auth/me', {
+        headers: S.token ? { 'Authorization': `Bearer ${S.token}` } : {}
+      });
+      return await res.json();
     }
   },
   products: {

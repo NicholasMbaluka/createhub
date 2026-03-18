@@ -4,17 +4,23 @@
 
 const LandingPage = {
   render() {
-    document.getElementById('app').innerHTML = `
-      ${this.navbar()}
-      <main>
-        ${this.hero()}
-        ${this.statsBand()}
-        ${this.features()}
-        ${this.pricing()}
-        ${this.footer()}
-      </main>
-    `;
-    this.bindEvents();
+    console.log('🏠 LandingPage.render() called');
+    try {
+      document.getElementById('app').innerHTML = `
+        ${this.navbar()}
+        <main>
+          ${this.hero()}
+          ${this.statsBand()}
+          ${this.features()}
+          ${this.pricing()}
+          ${this.footer()}
+        </main>
+      `;
+      this.bindEvents();
+      console.log('✅ LandingPage rendered successfully');
+    } catch (error) {
+      console.error('❌ LandingPage render failed:', error);
+    }
   },
 
   navbar() {

@@ -5,8 +5,14 @@
 
 const App = {
   init() {
-    this.setupRoutes();
-    Router.start();
+    console.log('🚀 App.init() called');
+    try {
+      this.setupRoutes();
+      Router.start();
+      console.log('✅ App initialized successfully');
+    } catch (error) {
+      console.error('❌ App initialization failed:', error);
+    }
   },
 
   setupRoutes() {

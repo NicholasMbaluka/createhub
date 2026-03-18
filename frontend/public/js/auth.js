@@ -42,6 +42,11 @@ const Auth = (() => {
   const refreshUser = async () => {
     if (!_token) return null;
     try {
+      // Check if API is available
+      if (!API || !API.auth || !API.auth.me) {
+        console.log('⚠️  API not available, skipping user refresh');
+        return null;
+      }
       const data = await API.auth.me();
       _user = data.user;
       localStorage.setItem(USER_KEY, JSON.stringify(_user));

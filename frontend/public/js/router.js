@@ -18,6 +18,7 @@ const Router = (() => {
 
   const resolve = () => {
     const hash = location.hash.slice(1) || '/';
+    console.log('🔍 Router resolving:', hash);
     // Find exact or prefix match
     let handler = routes[hash];
     if (!handler) {
@@ -30,8 +31,14 @@ const Router = (() => {
       }
     }
     if (!handler) handler = routes['/404'] || routes['/'];
+    console.log('🎯 Router handler found:', !!handler);
     _current = hash;
-    handler(hash);
+    try {
+      handler(hash);
+      console.log('✅ Route executed successfully');
+    } catch (error) {
+      console.error('❌ Route execution failed:', error);
+    }
   };
 
   const current = () => _current;
