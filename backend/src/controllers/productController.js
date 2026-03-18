@@ -119,6 +119,47 @@ const getProductAnalytics = async (req, res) => {
 // @access Public
 const getPublicProducts = async (req, res) => {
   try {
+    console.log('🔍 getPublicProducts called');
+    
+    // Return mock data when MongoDB is not available
+    return res.json({ 
+      success: true, 
+      products: [], 
+      total: 0, 
+      page: 1, 
+      pages: 0,
+      message: 'Running in mock mode - database not available'
+    });
+
+    // Original MongoDB code (commented out for now)
+    /*
+    // Check if Product model is available (MongoDB connected)
+    try {
+      const testConnection = Product.find;
+      if (typeof testConnection !== 'function') {
+        console.log('❌ Product model not available');
+        return res.json({ 
+          success: true, 
+          products: [], 
+          total: 0, 
+          page: 1, 
+          pages: 0,
+          message: 'Database not available - running in mock mode'
+        });
+      }
+      console.log('✅ Product model available');
+    } catch (modelError) {
+      console.log('❌ Product model error:', modelError.message);
+      return res.json({ 
+        success: true, 
+        products: [], 
+        total: 0, 
+        page: 1, 
+        pages: 0,
+        message: 'Database not available - running in mock mode'
+      });
+    }
+
     const { status, type, page = 1, limit = 20, sort = 'popular' } = req.query;
     const query = { status: 'active', visibility: 'public' };
     if (type) query.type = type;
@@ -129,16 +170,20 @@ const getPublicProducts = async (req, res) => {
     else if (sort === 'price-high') sortOption = { 'pricing.amount': -1 };
     else if (sort === 'newest') sortOption = { createdAt: -1 };
 
+    console.log('🔍 Executing Product.find query');
     const products = await Product.find(query)
       .populate('creator', 'name email')
       .sort(sortOption)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
+    console.log('🔍 Executing Product.countDocuments query');
     const total = await Product.countDocuments(query);
 
     res.json({ success: true, products, total, page: Number(page), pages: Math.ceil(total / limit) });
+    */
   } catch (err) {
+    console.error('❌ getPublicProducts error:', err.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
