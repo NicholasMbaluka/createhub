@@ -74,21 +74,31 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(express.static(path.join(__dirname, '../../frontend/public')));
 
 // ── API Routes ────────────────────────────────
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/analytics', require('./routes/analytics'));
-app.use('/api/notifications', require('./routes/notifications'));
-app.use('/api/subscriptions', require('./routes/subscriptions'));
-app.use('/api/kyc', require('./routes/kyc'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/email', require('./routes/email'));
-app.use('/api/webhooks', require('./routes/webhooks'));
-app.use('/api/revenue', require('./routes/revenue'));
-app.use('/api/delivery', require('./routes/delivery'));
-app.use('/api/storefront', require('./routes/storefront'));
-app.use('/api/lemon-squeezy', require('./routes/lemonSqueezy'));
+// Load routes with error handling to prevent crashes
+const loadRoute = (routePath, routeName) => {
+  try {
+    app.use(`/api/${routeName}`, require(routePath));
+    console.log(`✅ Loaded route: /api/${routeName}`);
+  } catch (error) {
+    console.log(`⚠️  Failed to load route /api/${routeName}: ${error.message}`);
+  }
+};
+
+loadRoute('./routes/auth', 'auth');
+loadRoute('./routes/users', 'users');
+loadRoute('./routes/products', 'products');
+loadRoute('./routes/orders', 'orders');
+loadRoute('./routes/analytics', 'analytics');
+loadRoute('./routes/notifications', 'notifications');
+loadRoute('./routes/subscriptions', 'subscriptions');
+loadRoute('./routes/kyc', 'kyc');
+loadRoute('./routes/admin', 'admin');
+loadRoute('./routes/email', 'email');
+loadRoute('./routes/webhooks', 'webhooks');
+loadRoute('./routes/revenue', 'revenue');
+loadRoute('./routes/delivery', 'delivery');
+loadRoute('./routes/storefront', 'storefront');
+loadRoute('./routes/lemonSqueezy', 'lemon-squeezy');
 
 // ── Health Check ──────────────────────────────
 app.get('/api/health', (req, res) => {
