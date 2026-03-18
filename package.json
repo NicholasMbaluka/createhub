@@ -8,7 +8,8 @@
     "dev": "cd backend && npm run dev",
     "start": "cd backend && npm start",
     "build": "echo 'SPA ready for deployment'",
-    "vercel-build": "echo 'Ready for deployment'"
+    "railway-build": "cd backend && npm install",
+    "postinstall": "cd backend && npm install"
   },
   "engines": {
     "node": ">=16.0.0"
