@@ -1,3 +1,9 @@
+// Polyfill for Node.js < 18
+if (!globalThis.Headers) {
+  const { Headers } = require('undici');
+  globalThis.Headers = Headers;
+}
+
 const { Resend } = require('resend');
 
 let resend;
