@@ -6,7 +6,7 @@
 const API = (() => {
   // Dynamic API URL - works in both development and production
   const BASE_URL = window.location.origin === 'http://localhost:3000' || window.location.origin === 'http://127.0.0.1:3000'
-    ? 'http://localhost:5000/api'
+    ? 'http://localhost:8081/api'
     : `${window.location.origin}/api`;
 
   const getToken = () => localStorage.getItem('ch_token');

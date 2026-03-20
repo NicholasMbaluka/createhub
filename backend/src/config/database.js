@@ -8,6 +8,15 @@ const connectDB = async () => {
     console.error(`❌ MongoDB connection error: ${error.message}`);
     // Don't exit process - continue with mock data for development
     console.log('⚠️  Running in mock mode - some features may be limited');
+    
+    // Initialize demo data for mock mode
+    try {
+      const { createDemoAdmin, createDemoCreator } = require('./mockData');
+      await createDemoAdmin();
+      await createDemoCreator();
+    } catch (mockError) {
+      console.error('❌ Failed to initialize demo data:', mockError.message);
+    }
   }
 };
 

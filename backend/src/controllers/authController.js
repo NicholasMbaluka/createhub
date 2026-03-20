@@ -1,8 +1,20 @@
 const { validationResult } = require('express-validator');
-const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const { generateToken } = require('../middleware/auth');
 const { createNotification } = require('../utils/notifications');
 const { sendEmail } = require('../services/emailService');
+
+// Dynamic model loading - use mock if MongoDB not available
+let User;
+let isMockMode = false;
+try {
+  User = require('../models/User');
+} catch (error) {
+  console.log('⚠️  Using mock User model - MongoDB not available');
+  const { MockUser } = require('../config/mockData');
+  User = MockUser;
+  isMockMode = true;
+}
 
 // @desc  Register new user
 // @route POST /api/auth/register
@@ -24,7 +36,15 @@ const register = async (req, res) => {
     const allowedRoles = ['public', 'creator'];
     const userRole = allowedRoles.includes(role) ? role : 'public';
 
-    const user = await User.create({ firstName, lastName, email, password, role: userRole });
+    // Hash password for mock mode (Mongoose model does this automatically)
+    let userData = { firstName, lastName, email, role: userRole };
+    if (isMockMode) {
+      userData.password = await bcrypt.hash(password, 10);
+    } else {
+      userData.password = password;
+    }
+
+    const user = await User.create(userData);
 
     // Welcome notification
     await createNotification(user._id, {
