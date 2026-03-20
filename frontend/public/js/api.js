@@ -52,6 +52,7 @@ const API = (() => {
       getProfile:    ()      => get('/users/me'),
       updateProfile: (data)  => put('/users/me', data),
       getCreator:    (slug)  => get(`/users/creator/${slug}`),
+      updatePayoutSettings: (data) => put('/users/payout-settings', data),
     },
 
     // ── Products ────────────────────────────────
@@ -98,6 +99,8 @@ const API = (() => {
       cancel:       (id)     => put(`/subscriptions/${id}/cancel`),
       mine:         ()       => get('/subscriptions/mine'),
       subscribers:  ()       => get('/subscriptions/subscribers'),
+      create:        (data)   => post('/subscriptions/create', data),
+      update:        (id, data) => put(`/subscriptions/${id}`, data),
       // Platform subscription plans
       getPlans:     ()       => get('/subscriptions/plans'),
       getStatus:    ()       => get('/subscriptions/status'),
@@ -110,6 +113,8 @@ const API = (() => {
       getMine: () => get('/notifications'),
       markRead: (id) => put(`/notifications/${id}/read`),
       markAllRead: () => put('/notifications/read-all'),
+      send: (data) => post('/notifications/send', data),
+      remove: (id) => del(`/notifications/${id}`),
     },
 
     // ── Admin ────────────────────────────────────

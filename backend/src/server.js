@@ -99,7 +99,6 @@ loadRoute('./routes/revenue', 'revenue');
 loadRoute('./routes/delivery', 'delivery');
 loadRoute('./routes/storefront', 'storefront');
 loadRoute('./routes/lemonSqueezy', 'lemon-squeezy');
-loadRoute('./routes/test', 'test');
 
 // ── Health Check ──────────────────────────────
 app.get('/api/health', (req, res) => {

@@ -52,7 +52,7 @@ const SettingsPage = {
               <div style="font-size:13.5px;font-weight:500">Bank account ending •••• 4821</div>
               <div style="font-size:12px;color:var(--text3)">Verified · Weekly payouts · USD</div>
             </div>
-            <button class="btn btn-outline btn-sm" onclick="Toast.info('Opening payout settings…')">Change</button>
+            <button class="btn btn-outline btn-sm" onclick="SettingsPage.openPayoutSettings()">Change</button>
           </div>
           <div style="display:flex;align-items:center;gap:12px;padding:0.85rem;background:var(--bg3s);border-radius:9px;border:1px solid var(--border2)">
             <span style="font-size:20px">💳</span>
@@ -130,6 +130,65 @@ const SettingsPage = {
       el.classList.toggle('off', !this._toggles[key]);
       Toast.success('Preference saved');
     });
+  },
+
+  openPayoutSettings() {
+    Modal.open(`
+      <div class="modal-title">Payout Settings</div>
+      <div style="display:grid;gap:1rem">
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Bank Account Number</label>
+          <input type="text" id="bank-account" placeholder="123456789" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Routing Number</label>
+          <input type="text" id="routing-number" placeholder="021000021" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Account Holder Name</label>
+          <input type="text" id="account-holder" placeholder="John Doe" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Payout Frequency</label>
+          <select id="payout-frequency" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Bi-weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="Modal.close()">Cancel</button>
+        <button class="btn btn-primary" onclick="SettingsPage.savePayoutSettings()">Save Settings</button>
+      </div>
+    `);
+  },
+
+  async savePayoutSettings() {
+    const bankAccount = $('#bank-account')?.value;
+    const routingNumber = $('#routing-number')?.value;
+    const accountHolder = $('#account-holder')?.value;
+    const frequency = $('#payout-frequency')?.value;
+
+    if (!bankAccount || !routingNumber || !accountHolder) {
+      Toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await API.users.updatePayoutSettings({
+        bankAccount,
+        routingNumber,
+        accountHolder,
+        frequency
+      });
+      
+      Toast.success('Payout settings updated successfully!');
+      Modal.close();
+      this.render();
+    } catch (err) {
+      Toast.error(err.message);
+    }
   },
 };
 
@@ -216,7 +275,7 @@ const SubscriptionsPage = {
             <div class="page-title">Subscriptions</div>
             <div class="page-subtitle">Manage your recurring subscribers.</div>
           </div>
-          <button class="btn btn-primary" onclick="Toast.info('Subscription plan builder coming soon!')">+ Create plan</button>
+          <button class="btn btn-primary" onclick="SubscriptionsPage.openPlanBuilder()">+ Create plan</button>
         </div>
 
         <div class="stats-grid stats-grid-3">
@@ -247,7 +306,7 @@ const SubscriptionsPage = {
                       <td style="color:var(--text3)">${Fmt.date(s.currentPeriodEnd)}</td>
                       <td style="color:var(--green);font-weight:600">${Fmt.currency(s.pricing?.amount)}</td>
                       <td>${H.badge(s.status)}</td>
-                      <td><button class="btn btn-outline btn-sm" onclick="Toast.info('Subscription details coming soon')">Manage</button></td>
+                      <td><button class="btn btn-outline btn-sm" onclick="SubscriptionsPage.manageSubscription('${s._id}')">Manage</button></td>
                     </tr>`).join('')}
                   </tbody>
                 </table>
@@ -258,6 +317,128 @@ const SubscriptionsPage = {
     } catch (err) {
       Dashboard.setContent(H.empty('♻️', 'Could not load subscriptions', err.message,
         `<button class="btn btn-outline mt-2" onclick="SubscriptionsPage.render()">Retry</button>`));
+    }
+  },
+
+  openPlanBuilder() {
+    Modal.open(`
+      <div class="modal-title">Create Subscription Plan</div>
+      <div style="display:grid;gap:1rem">
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Plan Name</label>
+          <input type="text" id="plan-name" placeholder="e.g., Premium Membership" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Price (USD)</label>
+          <input type="number" id="plan-price" placeholder="29.99" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Billing Cycle</label>
+          <select id="plan-cycle" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text)">
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Features (one per line)</label>
+          <textarea id="plan-features" rows="4" placeholder="Premium content&#10;Exclusive community&#10;Early access" style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);resize:vertical"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="Modal.close()">Cancel</button>
+        <button class="btn btn-primary" onclick="SubscriptionsPage.createPlan()">Create Plan</button>
+      </div>
+    `);
+  },
+
+  async createPlan() {
+    const name = $('#plan-name')?.value;
+    const price = $('#plan-price')?.value;
+    const cycle = $('#plan-cycle')?.value;
+    const features = $('#plan-features')?.value.split('\n').filter(f => f.trim());
+
+    if (!name || !price) {
+      Toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await API.subscriptions.create({
+        name,
+        price: parseFloat(price),
+        billingCycle: cycle,
+        features
+      });
+      
+      Toast.success('Subscription plan created successfully!');
+      Modal.close();
+      this.render();
+    } catch (err) {
+      Toast.error(err.message);
+    }
+  },
+
+  manageSubscription(subId) {
+    Modal.open(`
+      <div class="modal-title">Manage Subscription</div>
+      <div style="display:grid;gap:1rem">
+        <div style="display:flex;gap:1rem">
+          <button class="btn btn-outline" onclick="SubscriptionsPage.pauseSubscription('${subId}')">Pause</button>
+          <button class="btn btn-outline" onclick="SubscriptionsPage.cancelSubscription('${subId}')">Cancel</button>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:0.5rem;font-size:13px;font-weight:500">Send message to subscriber</label>
+          <textarea id="sub-message" rows="3" placeholder="Type your message..." style="width:100%;padding:8px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);resize:vertical"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="Modal.close()">Close</button>
+        <button class="btn btn-primary" onclick="SubscriptionsPage.sendMessage('${subId}')">Send Message</button>
+      </div>
+    `);
+  },
+
+  async pauseSubscription(subId) {
+    try {
+      await API.subscriptions.update(subId, { status: 'paused' });
+      Toast.success('Subscription paused');
+      Modal.close();
+      this.render();
+    } catch (err) {
+      Toast.error(err.message);
+    }
+  },
+
+  async cancelSubscription(subId) {
+    Modal.confirm('Are you sure you want to cancel this subscription?', async () => {
+      try {
+        await API.subscriptions.update(subId, { status: 'cancelled' });
+        Toast.success('Subscription cancelled');
+        Modal.close();
+        this.render();
+      } catch (err) {
+        Toast.error(err.message);
+      }
+    });
+  },
+
+  async sendMessage(subId) {
+    const message = $('#sub-message')?.value;
+    if (!message) {
+      Toast.error('Please enter a message');
+      return;
+    }
+
+    try {
+      await API.notifications.send({
+        subscriptionId: subId,
+        message,
+        type: 'custom'
+      });
+      Toast.success('Message sent to subscriber');
+      Modal.close();
+    } catch (err) {
+      Toast.error(err.message);
     }
   },
 };
