@@ -9,14 +9,21 @@ const createAdmin = async () => {
       return;
     }
 
-    const existingAdmin = await User.findOne({ email: 'nicholasmbaluka05@gmail.com' });
+    // Use environment variables for admin credentials (more secure)
+    const adminEmail = process.env.ADMIN_EMAIL || 'nicholasmbaluka05@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Nisuchondey2702#';
+    const adminFirstName = process.env.ADMIN_FIRST_NAME || 'Nicholas';
+    const adminLastName = process.env.ADMIN_LAST_NAME || 'Mbaluka';
+    
+    const existingAdmin = await User.findOne({ email: adminEmail });
     
     if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash('Nisuchondey2702#', 10);
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
       
       const admin = new User({
-        name: 'Admin User',
-        email: 'nicholasmbaluka05@gmail.com',
+        firstName: adminFirstName,
+        lastName: adminLastName,
+        email: adminEmail,
         password: hashedPassword,
         role: 'admin',
         status: 'active'
