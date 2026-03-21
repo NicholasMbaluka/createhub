@@ -4,10 +4,15 @@
    ═══════════════════════════════════════════════ */
 
 const API = (() => {
-  // Dynamic API URL - works in both development and production
-  const BASE_URL = window.location.origin === 'http://localhost:3000' || window.location.origin === 'http://127.0.0.1:3000'
-    ? 'http://localhost:8081/api'
-    : `${window.location.origin}/api`;
+  // Dynamic API URL - localhost for development, relative for production
+  const isLocalDev = window.location.origin === 'http://localhost:3000' || 
+                     window.location.origin === 'http://127.0.0.1:3000' ||
+                     window.location.origin === 'http://localhost:8081' ||
+                     window.location.origin === 'http://127.0.0.1:8081';
+  
+  const BASE_URL = isLocalDev
+    ? 'http://localhost:8081/api'  // Local development
+    : '/api';                     // Production - relative path
 
   const getToken = () => localStorage.getItem('ch_token');
 
