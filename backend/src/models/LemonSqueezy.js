@@ -250,13 +250,11 @@ const productIntegrationSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Indexes for performance
-lemonSubscriptionSchema.index({ lemonSubscriptionId: 1 });
+// Indexes for performance (removed duplicates - lemonSubscriptionId and lemonOrderId already have unique indexes)
 lemonSubscriptionSchema.index({ creatorId: 1, status: 1 });
 lemonSubscriptionSchema.index({ customerId: 1, status: 1 });
 lemonSubscriptionSchema.index({ type: 1, status: 1 });
 
-lemonOrderSchema.index({ lemonOrderId: 1 });
 lemonOrderSchema.index({ creatorId: 1, status: 1 });
 lemonOrderSchema.index({ customerId: 1, status: 1 });
 lemonOrderSchema.index({ productId: 1 });
