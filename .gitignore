@@ -93,9 +93,6 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# Vercel
-.vercel
-
 # Package manager files
 package-lock.json
 yarn.lock
