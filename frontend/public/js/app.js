@@ -7,9 +7,27 @@ const App = {
   init() {
     console.log('🚀 App.init() called');
     try {
+      // Wait for all scripts to load
+      if (typeof Router === 'undefined') {
+        console.error('❌ Router not loaded');
+        setTimeout(() => this.init(), 100);
+        return;
+      }
+      
       this.setupRoutes();
       Router.start();
       console.log('✅ App initialized successfully');
+      
+      // Test navigation after a short delay
+      setTimeout(() => {
+        console.log('🧪 Testing router availability...');
+        if (typeof Router.navigate === 'function') {
+          console.log('✅ Router is ready');
+        } else {
+          console.error('❌ Router not available');
+        }
+      }, 500);
+      
     } catch (error) {
       console.error('❌ App initialization failed:', error);
     }

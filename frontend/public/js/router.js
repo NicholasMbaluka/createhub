@@ -9,9 +9,16 @@ const Router = (() => {
   const register = (path, handler) => { routes[path] = handler; };
 
   const navigate = (path, replace = false) => {
-    if (replace) {
-      history.replaceState(null, '', `#${path}`);
-    } else {
+    console.log('🚀 Router navigate to:', path);
+    try {
+      if (replace) {
+        history.replaceState(null, '', `#${path}`);
+      } else {
+        location.hash = path;
+      }
+    } catch (error) {
+      console.error('❌ Router navigation error:', error);
+      // Fallback: direct hash assignment
       location.hash = path;
     }
   };
