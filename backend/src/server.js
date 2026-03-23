@@ -24,7 +24,8 @@ try {
 const app = express();
 
 // ── Connect Database ──────────────────────────
-connectDB();
+// connectDB is called inside startServer() below so we can await it
+// before any model operations run.
 
 // ── Enhanced Security Middleware ───────────────
 app.use(helmet({
@@ -122,18 +123,32 @@ app.use((err, req, res, next) => {
 
 // ── Start Server ──────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
-  console.log(`\n🚀 CreateHub API running on port ${PORT}`);
-  console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Frontend:    ${process.env.FRONTEND_URL || 'http://localhost:3000'}\n`);
-  
-  // Create admin account on startup
+
+const startServer = async () => {
+  // 1. Establish database connection before anything else
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error(`❌ Failed to connect to database: ${error.message}`);
+    process.exit(1);
+  }
+
+  // 2. Start listening
+  app.listen(PORT, () => {
+    console.log(`\n🚀 CreateHub API running on port ${PORT}`);
+    console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 Frontend:    ${process.env.FRONTEND_URL || 'http://localhost:3000'}\n`);
+  });
+
+  // 3. Seed admin user now that the DB is confirmed ready
   try {
     const createAdmin = require('./utils/createAdmin');
     await createAdmin();
   } catch (error) {
-    console.log('⚠️  Admin account creation skipped (may already exist)');
+    console.error(`⚠️  Admin account setup encountered an unexpected error: ${error.message}`);
   }
-});
+};
+
+startServer();
 
 module.exports = app;
