@@ -140,7 +140,17 @@ const startServer = async () => {
     console.log(`🌐 Frontend:    ${process.env.FRONTEND_URL || 'http://localhost:3000'}\n`);
   });
 
-  // 3. Seed admin user now that the DB is confirmed ready
+  // 3. Seed admin user now that the DB is confirmed ready.
+  //    Log the raw env vars so any misconfiguration is immediately visible.
+  console.log('🔧 Admin env vars (raw):');
+  console.log(`   ADMIN_EMAIL="${process.env.ADMIN_EMAIL || '(not set)'}"`);
+  console.log(`   ADMIN_FIRST_NAME="${process.env.ADMIN_FIRST_NAME || '(not set)'}"`);
+  console.log(`   ADMIN_LAST_NAME="${process.env.ADMIN_LAST_NAME || '(not set)'}"`);
+  console.log(`   ADMIN_PASSWORD=${process.env.ADMIN_PASSWORD ? '(set)' : '(not set)'}`);
+
+  // Brief pause to let the Mongoose connection fully settle before model operations.
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
   try {
     const createAdmin = require('./utils/createAdmin');
     await createAdmin();

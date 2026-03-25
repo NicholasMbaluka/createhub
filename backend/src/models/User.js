@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  firstName:    { type: String, required: [true, 'First name is required'], trim: true, default: 'Admin' },
-  lastName:     { type: String, required: [true, 'Last name is required'],  trim: true, default: 'User'  },
+  firstName:    { type: String, required: [true, 'First name is required'], trim: true, default: 'User' },
+  lastName:     { type: String, required: [true, 'Last name is required'],  trim: true, default: 'User' },
   email:        { type: String, required: [true, 'Email is required'], unique: true, lowercase: true, trim: true },
   password:     { type: String, required: [true, 'Password is required'], select: false, minlength: 8 },
   role:         { type: String, enum: ['public', 'creator', 'admin'], default: 'public' },
@@ -97,6 +97,15 @@ const userSchema = new mongoose.Schema({
 // Virtual: full name
 userSchema.virtual('name').get(function () {
   return `${this.firstName} ${this.lastName}`;
+});
+
+// Guarantee firstName / lastName are never empty strings before validation runs.
+// This fires before the required-field check so the schema default kicks in
+// even when an explicit empty string was passed to the constructor.
+userSchema.pre('validate', function (next) {
+  if (!this.firstName || !this.firstName.trim()) this.firstName = 'User';
+  if (!this.lastName  || !this.lastName.trim())  this.lastName  = 'User';
+  next();
 });
 
 // Hash password before save
