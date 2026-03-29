@@ -26,7 +26,7 @@ const API = (() => {
     try {
       const opts = { method, headers: headers() };
       if (body) opts.body = JSON.stringify(body);
-      const res = await fetch(`${BASE}${path}`, opts);
+      const res = await fetch(`${BASE_URL}${path}`, opts);
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || `HTTP ${res.status}`);
