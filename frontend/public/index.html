@@ -1087,8 +1087,8 @@ function renderLanding() {
     <h1 class="hero-title">Monetize your content.<br><span class="hl">Own your audience.</span></h1>
     <p class="hero-sub">CreateHub gives creators everything they need — sell digital products, build a stunning link-in-bio, and grow sustainable income. No code. No limits.</p>
     <div class="hero-cta">
-      <button class="hero-btn primary" onclick="go('auth')">Start for free →</button>
-      <button class="hero-btn secondary" onclick="go('auth')">Browse marketplace</button>
+      <button class="hero-btn primary" onclick="goAuth('register')">Start for free →</button>
+      <button class="hero-btn secondary" onclick="goAuth('login')">View live demo</button>
     </div>
   </section>
   <div class="stats-banner">
@@ -1174,7 +1174,7 @@ function renderLanding() {
           <div class="plan-name">${p.name}</div>
           <div class="plan-price">${p.price}<span class="per">${p.per}</span></div>
           ${p.feats.map(f=>`<div class="plan-feat"><span class="ck">✓</span>${f}</div>`).join('')}
-          <button class="plan-cta ${S.user && S.user.subscription?.plan === p.key ? 'current-plan-btn' : p.style}" onclick="${S.user && S.user.subscription?.plan === p.key ? 'toast(\"You are already on this plan!\",\"info\")' : 'go(\'auth\')'}">${S.user && S.user.subscription?.plan === p.key ? 'Current Plan' : p.cta}</button>
+          <button class="plan-cta ${S.user && S.user.subscription?.plan === p.key ? 'current-plan-btn' : p.style}" onclick="${S.user && S.user.subscription?.plan === p.key ? 'toast(\"You are already on this plan!\",\"info\")' : 'goAuth(\'register\')'}">${S.user && S.user.subscription?.plan === p.key ? 'Current Plan' : p.cta}</button>
         </div>
       `).join('')}
     </div>
@@ -1188,8 +1188,8 @@ function navLanding() {
     <div class="nav-links">
       <button class="nav-btn ghost" onclick="scrollTo('features')">Features</button>
       <button class="nav-btn ghost" onclick="scrollTo('pricing')">Pricing</button>
-      <button class="nav-btn outline" onclick="go('auth')">Sign in</button>
-      <button class="nav-btn primary" onclick="go('auth')">Get started free</button>
+      <button class="nav-btn outline" onclick="goAuth('login')">Sign in</button>
+      <button class="nav-btn primary" onclick="goAuth('register')">Get started free</button>
     </div>
   </nav>`;
 }
@@ -2442,6 +2442,20 @@ function go(route) {
   if (route === 'landing') S.page = 'overview';
   render();
   window.scrollTo(0,0);
+}
+
+function goAuth(tab) {
+  console.log('🔐 goAuth() called with tab:', tab);
+  try {
+    S.authTab = tab || 'login';
+    S.route = 'auth';
+    S.modal = null;
+    render();
+    window.scrollTo(0, 0);
+    console.log('✅ Navigation to auth tab succeeded:', S.authTab);
+  } catch (error) {
+    console.error('❌ goAuth() navigation failed:', error);
+  }
 }
 
 function scrollTo(id) {
