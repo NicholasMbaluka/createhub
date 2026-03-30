@@ -30,8 +30,8 @@ const LandingPage = {
       <div class="landing-nav-links">
         <a class="btn btn-ghost" href="#features" onclick="LandingPage.scrollTo('features')">Features</a>
         <a class="btn btn-ghost" href="#pricing"  onclick="LandingPage.scrollTo('pricing')">Pricing</a>
-        <button class="btn btn-ghost"   onclick="Router.navigate('/login')">Sign in</button>
-        <button class="btn btn-primary" onclick="Router.navigate('/register')">Get started free</button>
+        <button class="btn btn-ghost" onclick="(function(){ console.log('🔐 Sign in clicked'); try { Router.navigate('/login'); console.log('✅ Navigating to /login'); } catch(e) { console.error('❌ Navigation failed:', e); } })()">Sign in</button>
+        <button class="btn btn-primary" onclick="(function(){ console.log('🚀 Get started clicked'); try { Router.navigate('/register'); console.log('✅ Navigating to /register'); } catch(e) { console.error('❌ Navigation failed:', e); } })()">Get started free</button>
       </div>
     </nav>`;
   },
@@ -43,8 +43,8 @@ const LandingPage = {
       <h1 class="hero-title">Monetize your content.<br><span class="hl">Own your audience.</span></h1>
       <p class="hero-sub">CreateHub gives creators everything they need — sell digital products, build a stunning link-in-bio, accept payments globally, and grow a sustainable income. No code. No limits.</p>
       <div class="hero-cta">
-        <button class="hero-btn primary" onclick="Router.navigate('/register')">Start for free →</button>
-        <button class="hero-btn secondary" onclick="Router.navigate('/login')">View live demo</button>
+        <button class="hero-btn primary" onclick="(function(){ console.log('🚀 Start for free clicked'); try { Router.navigate('/register'); console.log('✅ Navigating to /register'); } catch(e) { console.error('❌ Navigation failed:', e); } })()">Start for free →</button>
+        <button class="hero-btn secondary" onclick="(function(){ console.log('🔐 View live demo clicked'); try { Router.navigate('/login'); console.log('✅ Navigating to /login'); } catch(e) { console.error('❌ Navigation failed:', e); } })()">View live demo</button>
       </div>
     </section>`;
   },

@@ -9,10 +9,16 @@ const Router = (() => {
   const register = (path, handler) => { routes[path] = handler; };
 
   const navigate = (path, replace = false) => {
-    if (replace) {
-      history.replaceState(null, '', `#${path}`);
-    } else {
-      location.hash = path;
+    console.log('🧭 Router.navigate() called with path:', path);
+    try {
+      if (replace) {
+        history.replaceState(null, '', `#${path}`);
+      } else {
+        location.hash = path;
+      }
+      console.log('✅ Router.navigate() succeeded, hash is now:', location.hash);
+    } catch (error) {
+      console.error('❌ Router.navigate() failed:', error);
     }
   };
 
