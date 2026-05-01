@@ -1,237 +1,304 @@
-# CreateHub — Creator Economy SaaS Platform
+# CreateHub V2 - WhatsApp Creator Commerce Platform
 
-A full-stack creator economy platform similar to Patreon/Gumroad. Creators can sell digital products, build link-in-bio pages, manage subscribers, and track analytics. Admins oversee the platform with user management, KYC review, and transaction monitoring.
+A simplified creator commerce platform focused on WhatsApp-based ordering with no backend needed.
 
----
+## Features
 
-## 🏗️ Architecture
+- **Authentication**: Supabase email/password auth
+- **Creator Profiles**: Public storefronts (`/store/[store-name]`)
+- **Product Management**: Add/edit products with stock tracking
+- **WhatsApp Orders**: Direct customer ordering via WhatsApp
+- **No Order Management**: Handle everything through WhatsApp
+- **Role-Based Access**: Creators manage their products
+- **Mobile-First**: Works perfectly on all devices
 
-```
-createhub/
-├── backend/                  # Node.js / Express API
-│   └── src/
-│       ├── config/           # Database connection
-│       ├── controllers/      # Route handlers
-│       │   ├── authController.js
-│       │   ├── userController.js
-│       │   ├── productController.js
-│       │   ├── orderController.js
-│       │   ├── kycController.js
-│       │   ├── analyticsController.js
-│       │   ├── subscriptionController.js
-│       │   ├── notificationController.js
-│       │   └── adminController.js
-│       ├── middleware/
-│       │   └── auth.js       # JWT protect + authorize + requireKYC
-│       ├── models/           # Mongoose schemas
-│       │   ├── User.js
-│       │   ├── Product.js
-│       │   ├── Order.js
-│       │   ├── Subscription.js
-│       │   └── Notification.js
-│       ├── routes/           # Express routers
-│       │   ├── auth.js
-│       │   ├── users.js
-│       │   ├── products.js
-│       │   ├── orders.js
-│       │   ├── analytics.js
-│       │   ├── kyc.js
-│       │   ├── subscriptions.js
-│       │   ├── notifications.js
-│       │   └── admin.js
-│       ├── utils/
-│       │   ├── notifications.js   # Notification helper
-│       │   └── seed.js            # Demo data seeder
-│       └── server.js         # Express entry point
-│
-└── frontend/
-    └── public/
-        ├── index.html        # SPA entry point
-        ├── css/
-        │   └── main.css      # Full design system
-        └── js/
-            ├── api.js        # API client (all endpoints)
-            ├── auth.js       # Auth state management
-            ├── router.js     # Hash-based SPA router
-            ├── utils.js      # Toast, Modal, H helpers, Fmt
-            ├── app.js        # App bootstrap & routes
-            └── pages/
-                ├── landing.js
-                ├── auth.js
-                ├── dashboard.js      # Shell + Creator overview
-                ├── products.js
-                ├── analytics.js
-                ├── kyc.js
-                ├── linkbio.js
-                ├── admin.js          # All admin pages
-                └── settings.js       # Settings + Notifications + Subscriptions
-```
+## Tech Stack
 
----
+- **Frontend**: Next.js 14, React, TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Styling**: CSS with dark theme
+- **Deployment**: Vercel/Netlify ready
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB (local or Atlas)
+- Node.js 16+
+- Supabase account
 
-### 1. Clone & install
+### Installation
+
 ```bash
-git clone <repo>
+# Clone and install
 cd createhub
-cd backend && npm install
+npm install
 ```
 
-### 2. Configure environment
-```bash
-cp backend/.env.example backend/.env
-# Edit backend/.env:
-#   MONGODB_URI=mongodb://localhost:27017/createhub
-#   JWT_SECRET=your_secret_here
+### Environment Variables
+
+Create `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-### 3. Seed demo data
-```bash
-cd backend
-npm run seed
+### Database Setup
+
+Create these tables in your Supabase project:
+
+```sql
+-- Users table (created by Supabase Auth)
+create table users (
+  id uuid references auth.users not null primary key,
+  email text unique not null,
+  role text check (role in ('creator', 'founder')) not null,
+  created_at timestamp default now()
+);
+
+-- Creators table
+create table creators (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references users not null,
+  store_name text unique not null,
+  phone text not null,
+  created_at timestamp default now()
+);
+
+-- Products table
+create table products (
+  id uuid default gen_random_uuid() primary key,
+  creator_id uuid references creators not null,
+  name text not null,
+  price numeric not null,
+  description text,
+  image_url text,
+  stock integer not null default 0,
+  created_at timestamp default now()
+);
 ```
-This creates demo accounts:
-| Role    | Email                    | Password     |
-|---------|--------------------------|--------------|
-| Admin   | admin@createhub.io       | admin123     |
-| Creator | amara@example.com        | creator123   |
-| Creator | jake@example.com         | creator123   |
-| Buyer   | daniel@example.com       | user123      |
 
-### 4. Start the server
-```bash
-cd backend
-npm run dev
-```
+## How It Works
 
-### 5. Open in browser
-```
-http://localhost:5000
-```
+### WhatsApp Integration
 
----
+When a customer clicks "Order via WhatsApp":
 
-## 🔑 API Endpoints
+1. **Product Details**: Product name, price, and description are captured
+2. **Customer Info**: Customer fills name, phone, and location
+3. **WhatsApp Redirect**: Customer is redirected to creator's WhatsApp
+4. **Pre-filled Message**: WhatsApp opens with a formatted order message
+5. **Direct Communication**: Creator handles payment and delivery via WhatsApp
 
-### Auth
-| Method | Path                    | Access  | Description          |
-|--------|-------------------------|---------|----------------------|
-| POST   | /api/auth/register      | Public  | Register new user    |
-| POST   | /api/auth/login         | Public  | Login                |
-| GET    | /api/auth/me            | Private | Get current user     |
-| PUT    | /api/auth/password      | Private | Update password      |
+### Benefits
+
+- **No Order Management**: No database orders to track
+- **Direct Communication**: Customers talk directly with creators
+- **Simple Payment**: Handle payment however you prefer (cash, mobile money, etc.)
+- **Mobile-Friendly**: WhatsApp works on all devices
+- **No Fees**: No payment processing fees
+
+## Database Schema
+
+The system uses only 3 tables:
+
+### Users
+- `id` (UUID, primary key)
+- `email` (unique)
+- `role` ('creator' or 'founder')
+- `created_at`
+
+### Creators  
+- `id` (UUID, primary key)
+- `user_id` (references users)
+- `store_name` (unique)
+- `phone` (WhatsApp number)
+- `created_at`
 
 ### Products
-| Method | Path                         | Access         | Description          |
-|--------|------------------------------|----------------|----------------------|
-| GET    | /api/products                | Creator/Admin  | List my products     |
-| POST   | /api/products                | Creator        | Create product       |
-| PUT    | /api/products/:id            | Creator/Admin  | Update product       |
-| DELETE | /api/products/:id            | Creator/Admin  | Delete product       |
-| GET    | /api/products/public/:slug   | Public         | Get product by slug  |
-| GET    | /api/products/:id/analytics  | Creator/Admin  | Product analytics    |
+- `id` (UUID, primary key)  
+- `creator_id` (references creators)
+- `name` (product name)
+- `price` (numeric)
+- `description` (text)
+- `image_url` (optional)
+- `stock` (integer)
+- `created_at`
 
-### Orders
-| Method | Path                  | Access        | Description       |
-|--------|-----------------------|---------------|-------------------|
-| POST   | /api/orders           | Private       | Create order      |
-| GET    | /api/orders/purchases | Private       | My purchases      |
-| GET    | /api/orders/sales     | Creator/Admin | My sales          |
-| POST   | /api/orders/:id/refund| Private       | Request refund    |
-| GET    | /api/orders/admin     | Admin         | All orders        |
+## Deployment
 
-### KYC
-| Method | Path                           | Access  | Description         |
-|--------|--------------------------------|---------|---------------------|
-| GET    | /api/kyc                       | Private | Get KYC status      |
-| POST   | /api/kyc/submit                | Creator | Submit KYC          |
-| GET    | /api/kyc/admin/pending         | Admin   | Pending submissions |
-| PUT    | /api/kyc/admin/:userId/approve | Admin   | Approve KYC         |
-| PUT    | /api/kyc/admin/:userId/reject  | Admin   | Reject KYC          |
+### Vercel (Recommended)
 
-### Analytics
-| Method | Path                    | Access        | Description           |
-|--------|-------------------------|---------------|-----------------------|
-| GET    | /api/analytics/creator  | Creator/Admin | Creator dashboard     |
-| GET    | /api/analytics/admin    | Admin         | Platform analytics    |
+1. Push to GitHub
+2. Connect to Vercel
+3. Add Supabase environment variables
+4. Deploy
 
-### Admin
-| Method | Path                         | Access | Description        |
-|--------|------------------------------|--------|--------------------|
-| GET    | /api/admin/stats             | Admin  | Platform stats     |
-| GET    | /api/admin/users             | Admin  | List all users     |
-| GET    | /api/admin/users/:id         | Admin  | User detail        |
-| PUT    | /api/admin/users/:id/status  | Admin  | Suspend/activate   |
-| PUT    | /api/admin/users/:id/role    | Admin  | Change role        |
+### Netlify
+
+1. Build: `npm run build`
+2. Add environment variables
+3. Deploy
 
 ---
 
-## 👥 User Roles
-
-| Role    | Capabilities                                                                 |
-|---------|------------------------------------------------------------------------------|
-| public  | Browse, purchase products                                                    |
-| creator | All public + create products, analytics, KYC, link-in-bio, subscriptions    |
-| admin   | All creator + user management, KYC review, platform analytics, transactions  |
-
----
-
-## 🔒 Security Features
-- JWT authentication with 7-day expiry
-- bcrypt password hashing (12 rounds)
-- Rate limiting (100 req/15min global, 10 req/15min auth)
-- Helmet.js security headers
-- CORS configured for frontend origin
-- KYC gating for monetization endpoints
-- Role-based route protection
-
----
-
-## 💳 Payment Integration
-The platform is ready for Stripe integration. In `orderController.js`, the `createOrder` function returns the order — wire in your Stripe `PaymentIntent` creation here:
-
-```javascript
-// In createOrder(), after creating the order:
-const paymentIntent = await stripe.paymentIntents.create({
-  amount: Math.round(subtotal * 100),
-  currency: 'usd',
-  metadata: { orderId: order._id.toString() },
-});
-// Return paymentIntent.client_secret to frontend
+**V2 Philosophy**: Simple, WhatsApp-first commerce. No complex order management, no payment processing - just direct creator-customer communication.
+createhub/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/
+│   │   │   ├── login/
+│   │   │   └── register/
+│   │   ├── dashboard/
+│   │   │   ├── creator/
+│   │   │   └── founder/
+│   │   ├── creator/
+│   │   │   └── [id]/
+│   │   ├── product/
+│   │   │   └── [id]/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── globals.css
+│   └── lib/
+│       └── supabase.ts
+├── public/
+├── next.config.js
+├── tsconfig.json
+└── package.json
 ```
 
-Then handle webhook events in a new `/api/webhooks/stripe` route.
+## 🔄 Core Flows
+
+### Buyer Flow
+1. Visit creator storefront (`/creator/[id]`)
+2. View product details (`/product/[id]`)
+3. Click "Order Now" → Fill order form
+4. Order saved as "pending"
+5. Creator manually approves/rejects
+
+### Creator Flow
+1. Login/Register as creator
+2. Set up store with products
+3. View dashboard with stats and orders
+4. Approve/reject orders manually
+5. Stock management
+
+### Founder Flow
+1. Login as founder
+2. View all creators and orders
+3. Platform statistics
+4. User management
+
+## 🎯 Key Features
+
+### Authentication Module
+- Email/password signup/login
+- Role-based access (creator/founder)
+- Session management
+
+### Product Module
+- Create/edit/delete products
+- Image uploads via Supabase Storage
+- Manual stock management
+- Price and description
+
+### Order Module (Core)
+- Simple order form (no cart)
+- Required fields: name, phone, location
+- Status tracking: pending → approved/rejected
+- Manual approval workflow
+
+### Dashboard Modules
+- **Creator**: Stats, products, order management
+- **Founder**: Platform overview, all orders, user management
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Styling**: CSS with CSS variables
+- **Deployment**: Vercel (frontend), Supabase (backend)
+
+## 📱 Mobile-First Design
+
+- Responsive layouts for all screen sizes
+- Touch-friendly interfaces
+- Optimized for mobile order management
+
+## 🚀 Deployment
+
+### Frontend (Vercel)
+```bash
+npm run build
+vercel
+```
+
+### Backend (Supabase)
+1. Create Supabase project
+2. Run SQL setup scripts
+3. Configure environment variables
+4. Enable storage bucket for products
+
+## 🔧 Development
+
+```bash
+# Development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Lint code
+npm run lint
+```
+
+## 📊 Database Schema
+
+### Users
+- `id`: UUID (auth.users reference)
+- `email`: User email
+- `role`: 'creator' | 'founder'
+- `created_at`: Timestamp
+
+### Creators
+- `id`: UUID
+- `user_id`: User reference
+- `store_name`: Store display name
+- `phone`: Contact phone
+- `created_at`: Timestamp
+
+### Products
+- `id`: UUID
+- `creator_id`: Creator reference
+- `name`: Product name
+- `price`: Product price
+- `description`: Product details
+- `image_url`: Supabase storage URL
+- `stock`: Available quantity
+- `created_at`: Timestamp
+
+### Orders
+- `id`: UUID
+- `product_id`: Product reference
+- `creator_id`: Creator reference
+- `buyer_name`: Customer name
+- `buyer_phone`: Customer phone
+- `location`: Delivery location
+- `status`: 'pending' | 'approved' | 'rejected'
+- `created_at`: Timestamp
+
+## 🎯 V1 Philosophy
+
+Simple, focused, and production-ready:
+- Manual order approval (no auto-payments)
+- Stock tracking with manual updates
+- Role-based access control
+- Mobile-first design
+- No unnecessary features
 
 ---
 
-## 🌱 Extending the Platform
-
-- **Email notifications** — Add Nodemailer in `src/utils/email.js` and call it from controllers
-- **File uploads** — Multer is installed; add upload endpoints in products router
-- **Stripe webhooks** — Add `POST /api/webhooks/stripe` to finalize orders on payment success
-- **Custom domains** — Add domain field to User model and verify via DNS
-- **Reviews/ratings** — Add Review model and endpoint on `POST /api/products/:id/reviews`
-
----
-
-## 📦 Tech Stack
-
-| Layer     | Tech                                              |
-|-----------|---------------------------------------------------|
-| Backend   | Node.js, Express 4, Mongoose 8                    |
-| Database  | MongoDB                                           |
-| Auth      | JWT (jsonwebtoken), bcryptjs                      |
-| Validation| express-validator                                 |
-| Security  | helmet, cors, express-rate-limit                  |
-| Frontend  | Vanilla JS (SPA), HTML5, CSS3 (custom design sys) |
-| Fonts     | Syne (headings), DM Sans (body) via Google Fonts  |
-
----
-
-## 📄 License
-MIT — free to use and modify.
+Built with ❤️ using Next.js and Supabase

@@ -1,15 +1,41 @@
 {
   "name": "createhub",
   "version": "1.0.0",
-  "description": "CreateHub — Creator Economy SaaS Platform",
-  "main": "backend/src/server.js",
+  "description": "Creator commerce platform with Supabase and Next.js",
   "scripts": {
-    "install:all": "npm install && cd backend && npm install",
-    "dev": "cd backend && npm run dev",
-    "start": "cd backend && npm start",
-    "build": "echo 'SPA ready for deployment'",
-    "railway-build": "cd backend && npm install",
-    "postinstall": "cd backend && npm install"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [
+    "creator",
+    "commerce",
+    "supabase",
+    "nextjs",
+    "stock",
+    "orders",
+    "manual",
+    "approval"
+  ],
+  "author": "CreateHub Team",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@tailwindcss/postcss": "^4.2.4",
+    "autoprefixer": "^10.5.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.0.0",
+    "typescript": "^5.3.0"
   },
   "engines": {
     "node": ">=16.0.0"
