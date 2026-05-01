@@ -33,11 +33,12 @@ export default function LoginPage() {
         .single()
 
       if (profile?.role === 'founder') {
-        router.push('/dashboard/founder')
+        router.push('/dashboard/creator') // Temporarily redirect to creator dashboard
       } else {
         router.push('/dashboard/creator')
       }
     } catch (error: any) {
+      console.error('Login error:', error)
       setError(error.message || 'Login failed')
     } finally {
       setLoading(false)

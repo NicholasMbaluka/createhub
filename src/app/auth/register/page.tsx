@@ -1,16 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState('')
+  const searchParams = useSearchParams()
+  const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
   const [storeName, setStoreName] = useState('')
   const [phone, setPhone] = useState('')
-  const [role, setRole] = useState<'creator' | 'founder'>('creator')
+  const [role, setRole] = useState<'creator' | 'founder'>(
+    (searchParams.get('role') as 'creator' | 'founder') || 'creator'
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -21,7 +24,7 @@ export default function RegisterPage() {
     setError('')
 
     try {
-      // Sign up with Supabase
+      // Sign up with Supabase (trigger will create user profile)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -34,27 +37,16 @@ export default function RegisterPage() {
 
       if (error) throw error
 
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: data.user!.id,
-            email,
-            role,
-            created_at: new Date().toISOString()
-          }
-        ])
-
-      if (profileError) throw profileError
-
       // Create creator profile if role is creator
-      if (role === 'creator') {
+      if (role === 'creator' && data.user) {
+        // Wait a bit for the trigger to create the user profile
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
         const { error: creatorError } = await supabase
           .from('creators')
           .insert([
             {
-              user_id: data.user!.id,
+              user_id: data.user.id,
               store_name: storeName,
               phone: phone,
               created_at: new Date().toISOString()
@@ -66,6 +58,7 @@ export default function RegisterPage() {
 
       router.push('/auth/login?message=Registration successful')
     } catch (error: any) {
+      console.error('Registration error:', error)
       setError(error.message || 'Registration failed')
     } finally {
       setLoading(false)
