@@ -56,17 +56,17 @@ export default function CreatorDashboard() {
     const { data: productsData } = await supabase
       .from('products')
       .select('*')
-      .eq('creator_id', session.user.id)
-
-    // Get creator info
-    const { data: creatorData } = await supabase
-      .from('creators')
-      .select('*')
       .eq('user_id', session.user.id)
+
+    // Get user info
+    const { data: userData } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', session.user.id)
       .single()
 
     setProducts(productsData || [])
-    setCreator(creatorData)
+    setCreator(userData)
     setLoading(false)
   }
 

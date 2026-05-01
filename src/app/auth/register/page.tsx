@@ -37,24 +37,17 @@ export default function RegisterPage() {
 
       if (error) throw error
 
-      // Create creator profile if role is creator
-      if (role === 'creator' && data.user) {
-        // Wait a bit for the trigger to create the user profile
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        const { error: creatorError } = await supabase
-          .from('creators')
-          .insert([
-            {
-              user_id: data.user.id,
-              store_name: storeName,
-              phone: phone,
-              created_at: new Date().toISOString()
-            }
-          ])
+      // Update user profile with additional info
+      const { error: profileError } = await supabase
+        .from('users')
+        .update({
+          store_name: role === 'creator' ? storeName : null,
+          phone: role === 'creator' ? phone : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.user!.id)
 
-        if (creatorError) throw creatorError
-      }
+      if (profileError) throw profileError
 
       router.push('/auth/login?message=Registration successful')
     } catch (error: any) {

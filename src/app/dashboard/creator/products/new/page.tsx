@@ -51,13 +51,13 @@ export default function NewProduct() {
         .from('products')
         .insert([
           {
-            creator_id: session.user.id,
+            user_id: session.user.id,
             name: formData.name,
             price: parseFloat(formData.price),
             description: formData.description,
             image_url: formData.image_url || null,
             stock: parseInt(formData.stock),
-            created_at: new Date().toISOString()
+            status: 'active'
           }
         ])
 
